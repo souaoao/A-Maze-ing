@@ -4,6 +4,7 @@ VENV := .venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
 REQUIREMENTS := requirements.txt
+CONFIG := a_maze_ing/config.txt
 AMAZEING := a_maze_ing/a_maze_ing.py
 INSTALL_STAMP := $(VENV)/.installed
 
