@@ -1,5 +1,5 @@
 import sys
-from read_config_file import read_config_file
+from read_config_file.read_config_file import read_config_file
 
 
 def main() -> None:
