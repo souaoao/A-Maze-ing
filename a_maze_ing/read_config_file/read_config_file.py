@@ -5,7 +5,7 @@ from read_config_file.validate_config_parameters import (
 
 def perse_config_text(text: str) -> dict:
     """
-    読み込んだconfig.txtの内容を読み取り、一行ごとに(key=変数)の形で分離し、dictに格納する。同名のキーがある場合、ValueErrorを発生させる
+    読み込んだconfig.txtの内容を読み取り、一行ごとに(key=変数)の形で分離し、dictに格納する。同名のキーがある場合、ValueErrorを発生させる。また、行内に'='がない場合、IndexErrorが発生する
 
     Args:
         text (str): config.txtの中身

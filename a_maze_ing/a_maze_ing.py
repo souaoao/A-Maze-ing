@@ -12,7 +12,7 @@ def main() -> None:
         return
     try:
         config_params = read_config_file(sys.argv[1])
-    except (FileNotFoundError, ValueError) as error:
+    except (FileNotFoundError, ValueError, IndexError) as error:
         print(f"Error: {error}")
         return
     print(config_params)
