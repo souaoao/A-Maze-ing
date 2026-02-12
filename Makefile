@@ -8,9 +8,8 @@ CONFIG := a_maze_ing/config.txt
 AMAZEING := a_maze_ing/a_maze_ing.py
 INSTALL_STAMP := $(VENV)/.installed
 
-venv:
-	$(VENV):
-		python3 -m venv $(VENV)
+$(VENV):
+	python3 -m venv $(VENV)
 
 $(INSTALL_STAMP): $(VENV) $(REQUIREMENTS)
 	$(PIP) install -r $(REQUIREMENTS)
@@ -24,6 +23,5 @@ run: install
 debug:
 
 clean:
-	rm -rf __pycache__
-
-
+	rm -rf $(VENV)
+	find . -type d -name '__pycache__' -exec rm -rf {} +
