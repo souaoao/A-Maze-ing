@@ -1,4 +1,4 @@
-from pydantic import BaseModel, model_validator, Field
+from pydantic import BaseModel, model_validator, field_validator, Field
 from typing import Optional
 
 
@@ -10,6 +10,12 @@ class MazeParameters(BaseModel):
     output_file: str = Field(...)
     perfect: bool = Field(...)
     seed: Optional[int] = Field(None)
+
+    @field_validator("entry_coord", "exit_coord", mode="before")
+    @classmethod
+    def perse_coord(cls: "MazeParameters", coord_string: str):
+        x, y = coord_string.split(",")
+        return (x, y)
 
     @model_validator(mode='after')
     def check_parameters(self) -> "MazeParameters":
