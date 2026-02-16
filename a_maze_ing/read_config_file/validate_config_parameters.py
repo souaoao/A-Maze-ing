@@ -1,7 +1,9 @@
 from enum import Enum
+from typing import Optional
+from maze_parameter import MazeParameters
 
 
-class RequiredKeys(Enum):
+class RequiredKeys(str, Enum):
     """
     必須キーのEnum
 
@@ -10,13 +12,13 @@ class RequiredKeys(Enum):
     """
     width = "WIDTH"
     height = "HEIGHT"
-    entry_point = "ENTRY"
-    exit_point = "EXIT"
+    entry_coord = "ENTRY"
+    exit_coord = "EXIT"
     output_file = "OUTPUT_FILE"
     perfect = "PERFECT"
 
 
-class OptionalKeys(Enum):
+class OptionalKeys(str, Enum):
     """
     任意キーのEnum(現時点で未使用)
 
@@ -37,11 +39,13 @@ def check_optional_keys(parameters: dict) -> dict:
     Returns:
         dict: 検証済みのパラメータ
     """
-    parameters["SEED"] = int(parameters.get("SEED"))
+    seed_value: Optional[str] = parameters.get(OptionalKeys.seed)
+    if seed_value is not None:
+        parameters[OptionalKeys.seed] = int(seed_value)
     return parameters
 
 
-def check_all_required_keys(config_parameters: dict) -> None:
+def check_required_keys(config_parameters: dict) -> None:
     """
     必須のキーを全て持っているか検証し、持っていなければValueErrorを発生させる
 
@@ -49,9 +53,9 @@ def check_all_required_keys(config_parameters: dict) -> None:
         config_parameters (dict): _description_
     """
     missing_keys = [
-        key.value
+        key
         for key in RequiredKeys
-        if key.value not in config_parameters
+        if key not in config_parameters
     ]
     if len(missing_keys) != 0:
         raise ValueError(f"Missing keys: {missing_keys}")
@@ -72,23 +76,27 @@ def put_required_keys(config_parameters: dict) -> dict:
     Returns:
         dict: 必須キーが格納されたパラメータ
     """
-    entry_coord = config_parameters["ENTRY"].split(",")
-    exit_coord = config_parameters["EXIT"].split(",")
-    if config_parameters["PERFECT"] == "True":
+    entry_coord = config_parameters[RequiredKeys.entry_coord].split(",")
+    exit_coord = config_parameters[RequiredKeys.exit_coord].split(",")
+    if config_parameters[RequiredKeys.perfect] == "True":
         is_perfect = True
-    elif config_parameters["PERFECT"] == "False":
+    elif config_parameters[RequiredKeys.perfect] == "False":
         is_perfect = False
     else:
         raise ValueError(f"Invalid bool: {config_parameters['PERFECT']}")
 
-    config_parameters["WIDTH"] = int(config_parameters["WIDTH"])
-    config_parameters["HEIGHT"] = int(config_parameters["HEIGHT"])
-    config_parameters["ENTRY"] = (int(entry_coord[0]), int(entry_coord[1]))
-    config_parameters["EXIT"] = (int(exit_coord[0]), int(exit_coord[1]))
-    config_parameters["OUTPUT_FILE"] = config_parameters["OUTPUT_FILE"]
-    config_parameters["PERFECT"] = is_perfect
+    config_parameters[RequiredKeys.width] = int(
+        config_parameters[RequiredKeys.width])
+    config_parameters[RequiredKeys.height] = int(
+        config_parameters[RequiredKeys.height])
+    config_parameters[RequiredKeys.entry_coord] = (
+        int(entry_coord[0]), int(entry_coord[1]))
+    config_parameters[RequiredKeys.exit_coord] = (
+        int(exit_coord[0]), int(exit_coord[1]))
+    config_parameters[RequiredKeys.output_file] = config_parameters[
+        "OUTPUT_FILE"]
+    config_parameters[RequiredKeys.perfect] = is_perfect
     return config_parameters
-    # line too longがめんどくさいので一旦Enum未適用
 
 
 def validate_config_parameters(config_parameters: dict) -> dict:
@@ -101,7 +109,20 @@ def validate_config_parameters(config_parameters: dict) -> dict:
     Returns:
         dict: 正しいパラメータ
     """
-    check_all_required_keys(config_parameters)
+    check_required_keys(config_parameters)
     required_parameters = put_required_keys(config_parameters)
     all_parameters = check_optional_keys(required_parameters)
-    return all_parameters
+    normalized_parameters = {
+        "width": all_parameters[RequiredKeys.width],
+        "height": all_parameters[RequiredKeys.height],
+        "entry_coord": all_parameters[RequiredKeys.entry_coord],
+        "exit_coord": all_parameters[RequiredKeys.exit_coord],
+        "output_file": all_parameters[RequiredKeys.output_file],
+        "perfect": all_parameters[RequiredKeys.perfect],
+    }
+
+    seed_value = all_parameters.get(OptionalKeys.seed)
+    if seed_value is not None:
+        normalized_parameters["seed"] = seed_value
+    maze_parameter = MazeParameters(**normalized_parameters)
+    return maze_parameter
