@@ -2,6 +2,7 @@ from read_config_file.validate_config_parameters import (
     validate_config_parameters
 )
 from typing import Any
+from maze_parameter import MazeParameters
 
 
 def perse_config_text(text: str) -> dict[str, Any]:
@@ -26,14 +27,17 @@ def perse_config_text(text: str) -> dict[str, Any]:
     return config_parameters
 
 
-def read_config_file(config_file) -> dict[str, Any]:
+def read_config_file(config_file: str) -> MazeParameters:
     """
-    config.txtファイルを読み込み、設定を返す
+    config.txtの内容を読み取り、値をバリデートしてMazeParametersインスタンスとして返す
+
+    Args:
+        config_file (str): config.txtのファイルパス
 
     Returns:
-        dict: 迷路の幅、高さ、シード値などが格納されたdict
+        MazeParameters: 迷路のパラメータインスタンス
     """
-    with open(config_file, "r") as config_file:
-        config_text = config_file.read()
-    config_parameters = perse_config_text(config_text)
+    with open(config_file, "r") as file_obj:
+        config_text = file_obj.read()
+    config_parameters: dict[str, Any] = perse_config_text(config_text)
     return validate_config_parameters(config_parameters)

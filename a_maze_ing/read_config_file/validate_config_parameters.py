@@ -19,7 +19,7 @@ class RequiredKeys(str, Enum):
 
 class OptionalKeys(str, Enum):
     """
-    任意キーのEnum(現時点で未使用)
+    任意キーのEnum
 
     Args:
         Enum (_type_): Enum
@@ -28,15 +28,17 @@ class OptionalKeys(str, Enum):
     algorithm = "ALGORITHM"
 
 
-def validate_config_parameters(config_parameters: dict) -> dict:
+def validate_config_parameters(
+    config_parameters: dict[str, str]
+) -> MazeParameters:
     """
-    読み込んだconfig.txtの形式が正しいかどうかチェックし、正しくない場合ValueErrorを発生させる
+    dictをインスタンスに変換する
 
     Args:
-        config_parameters (dict): パラメータ
+        config_parameters (dict[str, str]): 迷路のパラメータが格納されたdict
 
     Returns:
-        dict: 正しいパラメータ
+        MazeParameters: MazeParametersインスタンス
     """
     normalized_parameters = {
         "width": config_parameters[RequiredKeys.width],
