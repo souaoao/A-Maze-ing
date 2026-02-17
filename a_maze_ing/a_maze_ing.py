@@ -1,5 +1,6 @@
 import sys
 from read_config_file.read_config_file import read_config_file
+from pydantic import ValidationError
 
 
 def main() -> None:
@@ -12,7 +13,10 @@ def main() -> None:
         return
     try:
         config_params = read_config_file(sys.argv[1])
-    except (FileNotFoundError, ValueError, IndexError) as error:
+    except (
+        FileNotFoundError, ValueError, IndexError,
+        ValidationError
+    ) as error:
         print(f"Error: {error}")
         return
     print(config_params)
