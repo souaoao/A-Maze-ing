@@ -1,5 +1,6 @@
 import sys
 from read_config_file.read_config_file import read_config_file
+from output_maze import OutputMaze
 from pydantic import ValidationError
 
 
@@ -20,6 +21,8 @@ def main() -> None:
         print(f"Error: {error}")
         return
     print(config_params)
+    output_maze = OutputMaze(config_params.output_file)
+    output_maze.output_maze()
 
 
 if __name__ == "__main__":
