@@ -52,5 +52,8 @@ def validate_config_parameters(
     seed_value = config_parameters.get(OptionalKeys.seed)
     if seed_value is not None:
         normalized_parameters["seed"] = seed_value
+    algorithm_type = config_parameters.get(OptionalKeys.algorithm)
+    if algorithm_type is not None:
+        normalized_parameters["algorithm"] = algorithm_type
     maze_parameter = MazeParameters(**normalized_parameters)
     return maze_parameter

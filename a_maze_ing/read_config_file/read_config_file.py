@@ -5,7 +5,7 @@ from typing import Any
 from maze_parameter import MazeParameters
 
 
-def perse_config_text(text: str) -> dict[str, Any]:
+def parse_config_text(text: str) -> dict[str, Any]:
     """
     読み込んだconfig.txtの内容を読み取り、一行ごとに(key=変数)の形で分離し、dictに格納する。同名のキーがある場合、ValueErrorを発生させる。また、行内に'='がない場合、IndexErrorが発生する
 
@@ -39,5 +39,5 @@ def read_config_file(config_file: str) -> MazeParameters:
     """
     with open(config_file, "r") as file_obj:
         config_text = file_obj.read()
-    config_parameters: dict[str, Any] = perse_config_text(config_text)
+    config_parameters: dict[str, Any] = parse_config_text(config_text)
     return validate_config_parameters(config_parameters)

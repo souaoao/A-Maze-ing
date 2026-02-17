@@ -1,5 +1,11 @@
 from pydantic import BaseModel, model_validator, field_validator, Field
 from typing import Optional
+from enum import Enum
+
+
+class AlgorithmType(str, Enum):
+    sample = "sample"
+    test = "test"
 
 
 class MazeParameters(BaseModel):
@@ -21,10 +27,10 @@ class MazeParameters(BaseModel):
     output_file: str = Field(...)
     perfect: bool = Field(...)
     seed: Optional[int] = Field(None)
+    algorithm: Optional[str] = Field(None)
 
     @field_validator("entry_coord", "exit_coord", mode="before")
-    @classmethod
-    def perse_coord(
+    def parse_coord(
         cls,
         coord_string: str | tuple[int, int]
     ) -> tuple[int, int]:
@@ -67,4 +73,8 @@ class MazeParameters(BaseModel):
             raise ValueError("Invalid exit coord (maze size < exit coord)")
         if not self.output_file.endswith(".txt"):
             raise ValueError("output_file must end with '.txt'")
+        if self.algorithm is not None:
+            allowed = {item.value for item in AlgorithmType}
+            if self.algorithm not in allowed:
+                raise ValueError(f"algorithm must be one of {allowed}")
         return self
