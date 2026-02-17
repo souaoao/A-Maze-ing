@@ -23,7 +23,7 @@ DIRECTIONS: Dict[str, Direction] = {
 }
 
 
-class MazeGenerater:
+class MazeGenerator:
     """
     迷路生成クラス（ボーナスのため、何種類か記載したいんご）
     """
@@ -42,8 +42,6 @@ class MazeGenerater:
         visited: List[List[bool]] = [[False for _ in range(self.width)] for _ in range(self.height)]
 
         def dfs(x: int, y: int) -> None:
-            if x == self.exit[0] and y == self.exit[1]:
-                return
             visited[y][x] = True
             direction: List[Direction] = list(DIRECTIONS.values())
             self.rng.shuffle(direction)
