@@ -1,0 +1,2 @@
+[tool.mypy]
+exclude = '(^\.venv/|^mlx/|^mlx-2\.2\.dist-info/)'
