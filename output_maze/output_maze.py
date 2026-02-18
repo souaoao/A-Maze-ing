@@ -3,6 +3,12 @@ from typing import Any
 
 
 class MazeModel(BaseModel):
+    """
+    迷路のgrid,entry,exit,routeをバリデートして管理するクラス
+
+    Args:
+        BaseModel (_type_): BaseModel
+    """
     grid: list[str] = Field(...)
     entry_coord: tuple[int, int] = Field(...)
     exit_coord: tuple[int, int] = Field(...)
@@ -11,14 +17,21 @@ class MazeModel(BaseModel):
     @field_validator("entry_coord", "exit_coord", mode="before")
     def parse_coord(
         cls,
-        coord_value: str | list[str] | tuple[int, int]
+        coord_value: str
     ) -> tuple[int, int]:
-        if isinstance(coord_value, tuple):
-            return coord_value
-        if isinstance(coord_value, str):
-            parts = coord_value.split(",")
-        else:
-            parts = coord_value
+        """
+        入口座標、出口座標の文字列→タプル化
+
+        Args:
+            coord_value (str | list[str] | tuple[int, int]): _description_
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            tuple[int, int]: _description_
+        """
+        parts = coord_value.split(",")
         if len(parts) != 2:
             raise ValueError("coord must be in 'x,y' format")
         return (int(parts[0]), int(parts[1]))
