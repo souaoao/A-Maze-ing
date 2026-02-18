@@ -35,6 +35,10 @@ class MazeGenerator:
         self.perfect: bool = True
         self.rng: Random = Random(12431421)
         self.forty_two: set[Tuple[int, int]] = self._build_forty_two()
+        if self.entry in self.forty_two:
+            raise ValueError("Entry cannot be inside 42 area")
+        if self.exit in self.forty_two:
+            raise ValueError("Exit cannot be inside 42 area")
         self.grid: List[List[int]] = [[
             0b1111 for _ in range(self.width)] for _ in range(self.height)]
 
@@ -64,10 +68,7 @@ class MazeGenerator:
                         self.grid[y][x] &= mask_wall
                         self.grid[next_y][next_x] &= mask_opposite
                         dfs(next_x, next_y)
-        if (self.entry[0], self.entry[1]) in self.forty_two:
-            raise ValueError
-        if (self.exit[0], self.exit[1]) in self.forty_two:
-            raise ValueError
+
         dfs(self.entry[0], self.entry[1])
         if not self.perfect:
             self._add_extra_connection()
