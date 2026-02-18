@@ -33,13 +33,15 @@ class MazeGenerator:
         self.entry: Tuple[int, int] = (0, 0)
         self.exit: Tuple[int, int] = (19, 14)
         self.rng: Random = Random(12431421)
-        self.grid: List[List[int]] = [[0b1111 for _ in range(self.width)] for _ in range(self.height)]
+        self.grid: List[List[int]] = [[
+            0b1111 for _ in range(self.width)] for _ in range(self.height)]
 
     # ==============================
     # 迷路生成（DFS）
     # ==============================
     def generate_dfs(self) -> List[List[int]]:
-        visited: List[List[bool]] = [[False for _ in range(self.width)] for _ in range(self.height)]
+        visited: List[List[bool]] = [[
+            False for _ in range(self.width)] for _ in range(self.height)]
 
         def dfs(x: int, y: int) -> None:
             visited[y][x] = True
