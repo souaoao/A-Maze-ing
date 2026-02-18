@@ -4,6 +4,13 @@ from enum import Enum
 
 
 class AlgorithmType(str, Enum):
+    """
+    アルゴリズムのタイプのEnumサンプル
+
+    Args:
+        str (_type_): _description_
+        Enum (_type_): _description_
+    """
     sample = "sample"
     test = "test"
 

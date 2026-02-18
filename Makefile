@@ -4,9 +4,11 @@ SHELL := /bin/bash
 VENV := .venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
+FLAKE8 := $(VENV)/bin/flake8
+MYPY := $(VENV)/bin/mypy
 REQUIREMENTS := requirements.txt
-CONFIG := a_maze_ing/config.txt
-AMAZEING := a_maze_ing/a_maze_ing.py
+CONFIG := config.txt
+AMAZEING := a_maze_ing.py
 INSTALL_STAMP := $(VENV)/.installed
 
 $(VENV):
@@ -30,6 +32,9 @@ clean:
 	rm -rf .mypy_cache
 
 lint: install
-	flake8 a_maze_ing
-	source $(VENV)/bin/activate \
-	&& mypy a_maze_ing --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	$(FLAKE8) .
+	$(MYPY) . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+
+lint-strict: install
+	$(FLAKE8) .
+	$(MYPY) . --strict

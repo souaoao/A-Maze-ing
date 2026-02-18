@@ -1,5 +1,6 @@
 from enum import Enum
-from maze_parameter import MazeParameters
+from .maze_parameter import MazeParameters
+from typing import Any
 
 
 class RequiredKeys(str, Enum):
@@ -40,7 +41,7 @@ def validate_config_parameters(
     Returns:
         MazeParameters: MazeParametersインスタンス
     """
-    normalized_parameters = {
+    normalized_parameters: dict[str, Any] = {
         "width": config_parameters[RequiredKeys.width],
         "height": config_parameters[RequiredKeys.height],
         "entry_coord": config_parameters[RequiredKeys.entry_coord],

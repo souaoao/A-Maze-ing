@@ -1,8 +1,6 @@
-from read_config_file.validate_config_parameters import (
-    validate_config_parameters
-)
+from .validate_config_parameters import validate_config_parameters
 from typing import Any
-from maze_parameter import MazeParameters
+from .maze_parameter import MazeParameters
 
 
 def parse_config_text(text: str) -> dict[str, Any]:
@@ -18,6 +16,8 @@ def parse_config_text(text: str) -> dict[str, Any]:
     lines = text.splitlines()
     config_parameters: dict[str, Any] = {}
     for line in lines:
+        if line.startswith("#"):
+            continue
         line_item = line.split("=")
         key = line_item[0]
         if key in config_parameters.keys():
@@ -27,7 +27,7 @@ def parse_config_text(text: str) -> dict[str, Any]:
     return config_parameters
 
 
-def read_config_file(config_file: str) -> MazeParameters:
+def read_config_params(config_file: str) -> MazeParameters:
     """
     config.txtの内容を読み取り、値をバリデートしてMazeParametersインスタンスとして返す
 
