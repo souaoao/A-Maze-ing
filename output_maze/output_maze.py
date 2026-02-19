@@ -7,10 +7,16 @@ import signal
 
 
 class WindowScale(int, Enum):
+    """
+    線の長さを決定するEnum
+    """
     line_length = 50
 
 
 class KeyCode(int, Enum):
+    """
+    KeyCodeのEnum
+    """
     esc = 65307
     one = 49
     two = 50
@@ -19,6 +25,9 @@ class KeyCode(int, Enum):
 
 
 class Colors(int, Enum):
+    """
+    カラーコードのEnum
+    """
     white = 0xFFFFFFFF
     blue = 0xFF0000FF
     green = 0xFF00FF00
@@ -29,6 +38,9 @@ class Colors(int, Enum):
 
 
 class OutputMaze():
+    """
+    maze.txt（または任意のファイルパス）から迷路を作成するクラス
+    """
     def __init__(self, output_file: str) -> None:
         """
         output_fileの内容を行い、MazeModelクラスでバリデートを行う
@@ -36,10 +48,34 @@ class OutputMaze():
         Args:
             output_file (_type_): 迷路の生成結果が記録されたファイル
         """
+        self.output_file = output_file
+        self.get_maze_info()
+
+        self.line_colors: list[Colors] = [
+            Colors.white,
+            Colors.yellow,
+            Colors.magenta,
+            Colors.cyan
+        ]
+        self.line_color_index: int = 0
+        self.line_color: int = self.line_colors[self.line_color_index]
+        self.entry_color: int = Colors.green
+        self.exit_color: int = Colors.red
+        self.route_color: int = Colors.blue
+
+        self.is_draw_route = False
+
+    def get_maze_info(self) -> None:
+        """
+        initで保存したself.output_fileから、迷路のサイズなどを決定するメソッド
+
+        Raises:
+            FileNotFoundError: ファイルが見つからない場合
+        """
         grid: list[str] = []
 
         try:
-            with open(output_file, "r") as file:
+            with open(self.output_file, "r") as file:
                 for line in file:
                     line = line.rstrip("\n")
                     if line == "":
@@ -59,23 +95,8 @@ class OutputMaze():
         }
         self.maze_model = MazeModel(**models)
         line_length = int(WindowScale.line_length)
-
         self.window_width = line_length * len(self.grid[0]) + 1
         self.window_height = line_length * len(self.grid) + 1
-
-        self.line_colors: list[Colors] = [
-            Colors.white,
-            Colors.yellow,
-            Colors.magenta,
-            Colors.cyan
-        ]
-        self.line_color_index: int = 0
-        self.line_color: int = self.line_colors[self.line_color_index]
-        self.entry_color: int = Colors.green
-        self.exit_color: int = Colors.red
-        self.route_color: int = Colors.blue
-
-        self.is_draw_route = False
 
     @property
     def grid(self) -> list[str]:
@@ -117,25 +138,14 @@ class OutputMaze():
         """
         return self.maze_model.route
 
-    def _on_key(self, keycode: int, mlx_apps: dict[str, Any]) -> None:
-        if keycode == KeyCode.esc:
-            mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
-        if keycode == KeyCode.one:
-            self.is_draw_route = not self.is_draw_route
-            self._draw_maze(
-                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
-            )
-        if keycode == KeyCode.two:
-            self.line_color_index = (
-                self.line_color_index + 1
-            ) % len(self.line_colors)
-            self.line_color = self.line_colors[self.line_color_index]
-            self._draw_maze(
-                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
-            )
-
     @staticmethod
     def _on_close(mlx_apps: dict[str, Any]) -> None:
+        """
+        xボタンを押したときに画面を閉じる
+
+        Args:
+            mlx_apps (dict[str, Any]): mlxのポインタなど
+        """
         mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
 
     @staticmethod
@@ -179,6 +189,19 @@ class OutputMaze():
         mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p,
         x1: int, y1: int, x2: int, y2: int, color: int
     ) -> None:
+        """
+        四角を描画するメソッド
+
+        Args:
+            mlx (Mlx): mlxインスタンス
+            mlx_ptr (c_void_p): mlxポインタ
+            win_ptr (c_void_p): winポインタ
+            x1 (int): 左上角のx座標
+            y1 (int): 左上角のy座標
+            x2 (int): 右下角のx座標
+            y2 (int): 右下角のy座標
+            color (int): カラーコード
+        """
         for y_coord in range(y1, y2):
             self._draw_straight_line(
                 mlx, mlx_ptr, win_ptr,
@@ -189,6 +212,14 @@ class OutputMaze():
     def _draw_maze_grid(
         self, mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p
     ) -> None:
+        """
+        迷路の壁を出力するメソッド
+
+        Args:
+            mlx (Mlx): mlxインスタンス
+            mlx_ptr (c_void_p): mlxポインタ
+            win_ptr (c_void_p): winポインタ
+        """
         line = WindowScale.line_length
 
         y_coord = 0
@@ -235,6 +266,14 @@ class OutputMaze():
     def _draw_endpoints(
         self, mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p
     ) -> None:
+        """
+        入口と出口のマスを塗りつぶすメソッド
+
+        Args:
+            mlx (Mlx): mlxインスタンス
+            mlx_ptr (c_void_p): mlxポインタ
+            win_ptr (c_void_p): winポインタ
+        """
         entry_x0 = self.entry_coord[0] * WindowScale.line_length + 1
         entry_x1 = entry_x0 + WindowScale.line_length - 1
         entry_y0 = self.entry_coord[1] * WindowScale.line_length + 1
@@ -259,6 +298,14 @@ class OutputMaze():
     def _draw_route(
         self, mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p
     ) -> None:
+        """
+        最短経路を描画するメソッド
+
+        Args:
+            mlx (Mlx): mlxインスタンス
+            mlx_ptr (c_void_p): mlxポインタ
+            win_ptr (c_void_p): winポインタ
+        """
         entry_x0 = self.entry_coord[0] * WindowScale.line_length
         entry_x1 = entry_x0 + WindowScale.line_length
         entry_y0 = self.entry_coord[1] * WindowScale.line_length
@@ -293,13 +340,57 @@ class OutputMaze():
         self,
         mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p
     ) -> None:
+        """
+        mlxウィンドウに描画するメソッド
+
+        Args:
+            mlx (Mlx): mlxインスタンス
+            mlx_ptr (c_void_p): mlxポインタ
+            win_ptr (c_void_p): winポインタ
+        """
         mlx.mlx_clear_window(mlx_ptr, win_ptr)
         if self.is_draw_route:
             self._draw_route(mlx, mlx_ptr, win_ptr)
         self._draw_endpoints(mlx, mlx_ptr, win_ptr)
         self._draw_maze_grid(mlx, mlx_ptr, win_ptr)
 
+    def _on_key(self, keycode: int, mlx_apps: dict[str, Any]) -> None:
+        """
+        何かしらのキーを押した際に、色々やるメソッド
+
+        Args:
+            keycode (int): 押されたキーのキーコード
+            mlx_apps (dict[str, Any]): mlxのいろいろ
+        """
+        if keycode == KeyCode.esc:
+            mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
+        if keycode == KeyCode.one:
+            try:
+                self.get_maze_info()
+            except FileNotFoundError as error:
+                print(f"Error: {error}")
+                mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
+            self._draw_maze(
+                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
+            )
+        if keycode == KeyCode.two:
+            self.is_draw_route = not self.is_draw_route
+            self._draw_maze(
+                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
+            )
+        if keycode == KeyCode.three:
+            self.line_color_index = (
+                self.line_color_index + 1
+            ) % len(self.line_colors)
+            self.line_color = self.line_colors[self.line_color_index]
+            self._draw_maze(
+                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
+            )
+
     def output_maze(self) -> None:
+        """
+        迷路を出力するメインメソッド
+        """
         mlx = Mlx()
         mlx_ptr = mlx.mlx_init()
         win_ptr = mlx.mlx_new_window(
@@ -316,6 +407,8 @@ class OutputMaze():
         try:
             self._draw_maze(mlx, mlx_ptr, win_ptr)
             mlx.mlx_loop(mlx_ptr)
+        except FileNotFoundError as error:
+            print(f"Error: {error}")
         finally:
             signal.signal(signal.SIGINT, previous_sigint_handler)
             mlx.mlx_destroy_window(mlx_ptr, win_ptr)
