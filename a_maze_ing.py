@@ -20,8 +20,6 @@ def main() -> None:
     ) as error:
         print(f"Error: {error}")
         return
-    print(config_params)
-    print()
     output_maze = OutputMaze(config_params.output_file)
     output_maze.output_maze()
 

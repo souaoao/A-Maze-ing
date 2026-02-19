@@ -18,11 +18,11 @@ $(INSTALL_STAMP): $(VENV) $(REQUIREMENTS)
 	$(PIP) install -r $(REQUIREMENTS)
 	touch $(INSTALL_STAMP)
 
-install: $(INSTALL_STAMP)
-
 run: install
 	source $(VENV)/bin/activate \
 	&& python3 $(AMAZEING) $(CONFIG)
+
+install: $(INSTALL_STAMP)
 
 debug:
 

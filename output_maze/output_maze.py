@@ -7,7 +7,7 @@ import signal
 
 
 class WindowScale(int, Enum):
-    line_length = 10
+    line_length = 50
 
 
 class KeyCode(int, Enum):
@@ -23,6 +23,9 @@ class Colors(int, Enum):
     blue = 0xFF0000FF
     green = 0xFF00FF00
     red = 0xFFFF0000
+    yellow = 0xFFFFFF00
+    magenta = 0xFFFF00FF
+    cyan = 0xFF00FFFF
 
 
 class OutputMaze():
@@ -60,7 +63,14 @@ class OutputMaze():
         self.window_width = line_length * len(self.grid[0]) + 1
         self.window_height = line_length * len(self.grid) + 1
 
-        self.line_color: int = Colors.white
+        self.line_colors: list[Colors] = [
+            Colors.white,
+            Colors.yellow,
+            Colors.magenta,
+            Colors.cyan
+        ]
+        self.line_color_index: int = 0
+        self.line_color: int = self.line_colors[self.line_color_index]
         self.entry_color: int = Colors.green
         self.exit_color: int = Colors.red
         self.route_color: int = Colors.blue
@@ -112,6 +122,14 @@ class OutputMaze():
             mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
         if keycode == KeyCode.one:
             self.is_draw_route = not self.is_draw_route
+            self._draw_maze(
+                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
+            )
+        if keycode == KeyCode.two:
+            self.line_color_index = (
+                self.line_color_index + 1
+            ) % len(self.line_colors)
+            self.line_color = self.line_colors[self.line_color_index]
             self._draw_maze(
                 mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
             )
@@ -211,7 +229,6 @@ class OutputMaze():
                         x0, y0, x0, y1,
                         self.line_color
                     )
-
                 x_coord += line
             y_coord += line
 
@@ -283,8 +300,6 @@ class OutputMaze():
         self._draw_maze_grid(mlx, mlx_ptr, win_ptr)
 
     def output_maze(self) -> None:
-        print(self.route)
-
         mlx = Mlx()
         mlx_ptr = mlx.mlx_init()
         win_ptr = mlx.mlx_new_window(
