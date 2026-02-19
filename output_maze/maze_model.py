@@ -1,5 +1,12 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
+from enum import Enum
+from mlx import Mlx
 from typing import Any
+from ctypes import c_void_p
+
+
+class WindowScale(int, Enum):
+    line_length = 100
 
 
 class MazeModel(BaseModel):
@@ -38,6 +45,12 @@ class MazeModel(BaseModel):
 
     @model_validator(mode="after")
     def check_model(self) -> "MazeModel":
+        """
+        モデルのバリデート
+
+        Returns:
+            MazeModel: バリデート済みモデル
+        """
         if not self.grid:
             raise ValueError("grid must not be empty")
         if not self.grid[0]:
@@ -91,6 +104,10 @@ class OutputMaze():
             "route": route
         }
         self.maze_model = MazeModel(**models)
+        line_length = int(WindowScale.line_length)
+        self.window_width = line_length * len(self.grid[0]) + 1
+        self.window_height = line_length * len(self.grid) + 1
+        self.color: int = int(0xFFFFFFFF)
 
     @property
     def grid(self) -> list[str]:
@@ -132,5 +149,101 @@ class OutputMaze():
         """
         return self.maze_model.route
 
+    @staticmethod
+    def _on_key(keycode: int, mlx_apps: dict[str, Any]) -> None:
+        if keycode == 65307:
+            mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
+
+    @staticmethod
+    def _on_close(mlx_apps: dict[str, Any]) -> None:
+        mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
+
+    @staticmethod
+    def _draw_straight_line(
+        mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p,
+        x1: int, y1: int, x2: int, y2: int, color: int
+    ) -> None:
+        dx = abs(x2 - x1)
+        dy = abs(y2 - y1)
+        sx = 1 if x1 < x2 else -1
+        sy = 1 if y1 < y2 else -1
+        err = dx - dy
+
+        while True:
+            mlx.mlx_pixel_put(mlx_ptr, win_ptr, x1, y1, color)
+            if x1 == x2 and y1 == y2:
+                break
+            err2 = 2 * err
+            if err2 > -dy:
+                err -= dy
+                x1 += sx
+            if err2 < dx:
+                err += dx
+                y1 += sy
+
+    def _draw_maze_grid(
+        self, mlx: Mlx, mlx_ptr: c_void_p, win_ptr: c_void_p
+    ) -> None:
+        line = WindowScale.line_length
+
+        y_coord = 0
+        for row in self.grid:
+            x_coord = 0
+            for cell in row:
+                cell_bits = int(cell, 16)
+
+                north = cell_bits & 0b0001
+                east = cell_bits & 0b0010
+                south = cell_bits & 0b0100
+                west = cell_bits & 0b1000
+
+                x0, y0 = x_coord, y_coord
+                x1, y1 = x_coord + line, y_coord + line
+
+                if north:
+                    self._draw_straight_line(
+                        mlx, mlx_ptr, win_ptr,
+                        x0, y0, x1, y0,
+                        self.color
+                    )
+                if east:
+                    self._draw_straight_line(
+                        mlx, mlx_ptr, win_ptr,
+                        x1, y0, x1, y1,
+                        self.color
+                    )
+                if south:
+                    self._draw_straight_line(
+                        mlx, mlx_ptr, win_ptr,
+                        x0, y1, x1, y1,
+                        self.color
+                    )
+                if west:
+                    self._draw_straight_line(
+                        mlx, mlx_ptr, win_ptr,
+                        x0, y0, x0, y1,
+                        self.color
+                    )
+
+                x_coord += line
+            y_coord += line
+
     def output_maze(self) -> None:
-        print(self.maze_model)
+        print(self.route)
+
+        mlx = Mlx()
+        mlx_ptr = mlx.mlx_init()
+        win_ptr = mlx.mlx_new_window(
+            mlx_ptr,
+            self.window_width, self.window_height,
+            "A-Maze-ing"
+        )
+        mlx_apps = {"mlx": mlx, "mlx_ptr": mlx_ptr, "win_ptr": win_ptr}
+
+        mlx.mlx_key_hook(win_ptr, self._on_key, mlx_apps)
+        mlx.mlx_hook(win_ptr, 33, 0, self._on_close, mlx_apps)
+        self._draw_maze_grid(mlx, mlx_ptr, win_ptr)
+        mlx.mlx_loop(mlx_ptr)
+
+        mlx.mlx_destroy_window(mlx_ptr, win_ptr)
+        mlx.mlx_release(mlx_ptr)
