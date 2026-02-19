@@ -1,6 +1,6 @@
 import sys
 from read_config_params import read_config_params
-from output_maze.maze_model import OutputMaze
+from output_maze.output_maze import OutputMaze
 from pydantic import ValidationError
 
 
