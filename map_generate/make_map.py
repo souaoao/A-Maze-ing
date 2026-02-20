@@ -63,10 +63,7 @@ class MazeGenerator:
                 next_y: int = y + d.y
                 if 0 <= next_x < self.width and 0 <= next_y < self.height:
                     if not visited[next_y][next_x]:
-                        mask_wall: int = (~d.wall) & 0b1111
-                        mask_opposite: int = (~d.opposite) & 0b1111
-                        self.grid[y][x] &= mask_wall
-                        self.grid[next_y][next_x] &= mask_opposite
+                        self._break_wall(x, y, d)
                         dfs(next_x, next_y)
 
         dfs(self.entry[0], self.entry[1])
@@ -92,11 +89,11 @@ class MazeGenerator:
                         is_outer: bool = self._is_outer_wall(x, y, d)
                         should_break: bool = self.rng.random() < probability
                         if have_wall and not is_outer and should_break:
-                            mask_wall: int = (~d.wall) & 0b1111
-                            mask_opposite: int = (~d.opposite) & 0b1111
-                            self.grid[y][x] &= mask_wall
-                            self.grid[next_y][next_x] &= mask_opposite
+                            self._break_wall(x, y, d)
 
+    # ==============================
+    # 外壁かどうかチェック
+    # ==============================
     def _is_outer_wall(self, x: int, y: int, d: Direction) -> bool:
         if d.wall == NORTH and y == 0:
             return True
@@ -108,7 +105,12 @@ class MazeGenerator:
             return True
         return False
 
+    # ==============================
+    # 42マスかどうかチェック
+    # ==============================
     def _build_forty_two(self) -> set[Tuple[int, int]]:
+        if self.width < 9 or self.height < 7:
+            return {}
         center_x: int = self.width // 2
         center_y: int = self.height // 2
         return {
@@ -125,4 +127,20 @@ class MazeGenerator:
 
     def _is_three_by_three_fully_open(self, x: int, y: int) -> bool:
         if x < 0 or y < 0 or x + 2 < self.width or y + 2 < self.height:
-            re
+            return False
+
+    def _is_would_create_three_by_three_open_breaking(self, x: int, y: int, d: Direction) -> bool:
+        next_x: int = x + d.x
+        next_y: int = y + d.y
+        backup_square: int = self.grid[y][x]
+        backup_next_square: int = self.grid[next_y][next_x]
+        self._break_wall(x, y, d)
+
+
+    def _break_wall(self, x: int, y: int, d: Direction) -> None:
+        next_x: int = x + d.x
+        next_y: int = y + d.y
+        mask_wall: int = (~d.wall) & 0b1111
+        mask_opposite: int = (~d.opposite) & 0b1111
+        self.grid[y][x] &= mask_wall
+        self.grid[next_y][next_x] &= mask_opposite
