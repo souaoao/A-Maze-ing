@@ -171,7 +171,7 @@ class DfsMazeGenerator(MazeGenerator):
         super().__init__(config)
 
     # ==============================
-    # 迷路生成（DFS）
+    # 迷路生成（DFS）深さ優先探索
     # ==============================
     def generate(self) -> List[List[int]]:
         self.grid: List[List[int]] = [[
@@ -205,7 +205,7 @@ class BfsMazeGenerator(MazeGenerator):
         super().__init__(config)
 
     # ==============================
-    # 迷路生成（BFS）
+    # 迷路生成（BFS）幅優先探索
     # ==============================
     def generate(self) -> List[List[int]]:
         self.grid: List[List[int]] = [[
