@@ -38,8 +38,7 @@ class MazeGenerator(ABC):
             raise ValueError("Entry cannot be inside 42 area")
         if self.exit in self.forty_two:
             raise ValueError("Exit cannot be inside 42 area")
-        self.grid: List[List[int]] = [[
-            0b1111 for _ in range(self.width)] for _ in range(self.height)]
+        self.grid: List[List[int]] = []
 
     @abstractmethod
     def generate_dfs(self) -> List[List[int]]:
@@ -201,11 +200,39 @@ class DfsMazeGenerator(MazeGenerator):
         return self.grid
 
 
-class DfsMazeGenerator(MazeGenerator):
+class BfsMazeGenerator(MazeGenerator):
     def __init__(self, config: Dict):
         super().__init__(config)
 
     # ==============================
-    # 迷路生成（DFS）
+    # 迷路生成（BFS）
     # ==============================
     def generate(self) -> List[List[int]]:
+        self.grid: List[List[int]] = [[
+            0b1111 for _ in range(self.width)] for _ in range(self.height)]
+        visited: List[List[bool]] = [[
+            False for _ in range(self.width)] for _ in range(self.height)]
+        for (x, y) in self.forty_two:
+            visited[y][x] = True
+
+        queue: deque = deque()
+        visited[self.entry[0]][self.entry[1]] = True
+        queue.append(self.entry)
+        while queue:
+            x: int
+            y: int
+            x, y = queue.popleft()
+            directions: List[Direction] = list(DIRECTIONS.values())
+            self.rng.shuffle(directions)
+            d: Direction
+            for d in directions:
+                next_x: int = x + d.x
+                next_y: int = y + d.y
+                if self._can_break_wall(x, y, d):
+                    if not visited[next_y][next_x]:
+                        self._break_wall(x, y, d)
+                        visited[next_y][next_x] = True
+                        queue.append((next_x, next_y))
+        if not self.perfect:
+            self._add_extra_connection()
+        return self.grid
