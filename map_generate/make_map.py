@@ -122,3 +122,7 @@ class MazeGenerator:
             (center_x + 1, center_y + 1), (center_x + 1, center_y + 2),
             (center_x + 2, center_y + 2), (center_x + 3, center_y + 2),
         }
+
+    def _is_three_by_three_fully_open(self, x: int, y: int) -> bool:
+        if x < 0 or y < 0 or x + 2 < self.width or y + 2 < self.height:
+            re

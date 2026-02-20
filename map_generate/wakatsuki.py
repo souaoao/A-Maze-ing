@@ -166,3 +166,61 @@ class Maze:
             print(middle)
 
         print("+" + "---+" * self.width)
+
+
+def _is_3x3_fully_open(self, x0: int, y0: int) -> bool:
+    """左上(x0,y0)の3x3が、内部の隣接が全部開通してたら True（=禁止状態）"""
+    if x0 < 0 or y0 < 0 or x0 + 2 >= self.width or y0 + 2 >= self.height:
+        return False
+
+    # 横方向（east）: 2本 × 3行 = 6本
+    for yy in range(y0, y0 + 3):
+        for xx in range(x0, x0 + 2):
+            if (self.grid[yy][xx] & EAST) != 0:  # east壁がある=閉じてる
+                return False
+
+    # 縦方向（south）: 2本 × 3列 = 6本
+    for xx in range(x0, x0 + 3):
+        for yy in range(y0, y0 + 2):
+            if (self.grid[yy][xx] & SOUTH) != 0:  # south壁がある=閉じてる
+                return False
+
+    return True
+
+
+def _would_create_3x3_open_by_breaking(
+    self, x: int, y: int, d: Direction, next_x: int, next_y: int
+) -> bool:
+    """
+    いまから (x,y)->(next_x,next_y) の壁を壊すとき、
+    どこかの3x3が完全開放になるなら True（=この手は禁止）
+    """
+    # 仮に壊す
+    before_a = self.grid[y][x]
+    before_b = self.grid[next_y][next_x]
+
+    mask_wall: int = (~d.wall) & 0b1111
+    mask_opp: int = (~d.opposite) & 0b1111
+    self.grid[y][x] &= mask_wall
+    self.grid[next_y][next_x] &= mask_opp
+
+    # 影響するのは周辺だけ：変更した2セル周りの3x3左上候補を検査
+    min_x0 = min(x, next_x) - 2
+    max_x0 = max(x, next_x)
+    min_y0 = min(y, next_y) - 2
+    max_y0 = max(y, next_y)
+
+    bad = False
+    for y0 in range(min_y0, max_y0 + 1):
+        for x0 in range(min_x0, max_x0 + 1):
+            if self._is_3x3_fully_open(x0, y0):
+                bad = True
+                break
+        if bad:
+            break
+
+    # 戻す
+    self.grid[y][x] = before_a
+    self.grid[next_y][next_x] = before_b
+
+    return bad
