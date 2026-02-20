@@ -216,7 +216,7 @@ class BfsMazeGenerator(MazeGenerator):
             visited[y][x] = True
 
         queue: deque = deque()
-        visited[self.entry[0]][self.entry[1]] = True
+        visited[self.entry[1]][self.entry[0]] = True
         queue.append(self.entry)
         while queue:
             x: int
