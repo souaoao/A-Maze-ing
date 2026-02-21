@@ -166,3 +166,4 @@ class Maze:
             print(middle)
 
         print("+" + "---+" * self.width)
+
