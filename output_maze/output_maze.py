@@ -4,13 +4,15 @@ from mlx import Mlx
 from typing import Any
 from ctypes import c_void_p
 import signal
+import time
 
 
-class WindowScale(int, Enum):
+class GenerateConfig(int, Enum):
     """
     線の長さを決定するEnum
     """
     line_length = 50
+    sleep_time = 1
 
 
 class KeyCode(int, Enum):
@@ -64,6 +66,7 @@ class OutputMaze():
         self.route_color: int = Colors.blue
 
         self.is_draw_route = False
+        self.is_animation = False
 
     def get_maze_info(self) -> None:
         """
@@ -94,7 +97,7 @@ class OutputMaze():
             "route": route
         }
         self.maze_model = MazeModel(**models)
-        line_length = int(WindowScale.line_length)
+        line_length = int(GenerateConfig.line_length)
         self.window_width = line_length * len(self.grid[0]) + 1
         self.window_height = line_length * len(self.grid) + 1
 
@@ -220,7 +223,7 @@ class OutputMaze():
             mlx_ptr (c_void_p): mlxポインタ
             win_ptr (c_void_p): winポインタ
         """
-        line = WindowScale.line_length
+        line = GenerateConfig.line_length
 
         y_coord = 0
         for row in self.grid:
@@ -261,6 +264,9 @@ class OutputMaze():
                         self.line_color
                     )
                 x_coord += line
+                if self.is_animation:
+                    mlx.mlx_do_sync(mlx_ptr)
+                    time.sleep(GenerateConfig.sleep_time * 0.0001)
             y_coord += line
 
     def _draw_endpoints(
@@ -274,15 +280,15 @@ class OutputMaze():
             mlx_ptr (c_void_p): mlxポインタ
             win_ptr (c_void_p): winポインタ
         """
-        entry_x0 = self.entry_coord[0] * WindowScale.line_length + 1
-        entry_x1 = entry_x0 + WindowScale.line_length - 1
-        entry_y0 = self.entry_coord[1] * WindowScale.line_length + 1
-        entry_y1 = entry_y0 + WindowScale.line_length - 1
+        entry_x0 = self.entry_coord[0] * GenerateConfig.line_length + 1
+        entry_x1 = entry_x0 + GenerateConfig.line_length - 1
+        entry_y0 = self.entry_coord[1] * GenerateConfig.line_length + 1
+        entry_y1 = entry_y0 + GenerateConfig.line_length - 1
 
-        exit_x0 = self.exit_coord[0] * WindowScale.line_length + 1
-        exit_x1 = exit_x0 + WindowScale.line_length - 1
-        exit_y0 = self.exit_coord[1] * WindowScale.line_length + 1
-        exit_y1 = exit_y0 + WindowScale.line_length - 1
+        exit_x0 = self.exit_coord[0] * GenerateConfig.line_length + 1
+        exit_x1 = exit_x0 + GenerateConfig.line_length - 2
+        exit_y0 = self.exit_coord[1] * GenerateConfig.line_length + 1
+        exit_y1 = exit_y0 + GenerateConfig.line_length - 1
 
         self._draw_square(
             mlx, mlx_ptr, win_ptr,
@@ -306,16 +312,18 @@ class OutputMaze():
             mlx_ptr (c_void_p): mlxポインタ
             win_ptr (c_void_p): winポインタ
         """
-        entry_x0 = self.entry_coord[0] * WindowScale.line_length
-        entry_x1 = entry_x0 + WindowScale.line_length
-        entry_y0 = self.entry_coord[1] * WindowScale.line_length
-        entry_y1 = entry_y0 + WindowScale.line_length
+        LINE_LENGTH = GenerateConfig.line_length
+
+        entry_x0 = int(self.entry_coord[0] * LINE_LENGTH + LINE_LENGTH * 0.2)
+        entry_x1 = int(entry_x0 + LINE_LENGTH * 0.6)
+        entry_y0 = int(self.entry_coord[1] * LINE_LENGTH + LINE_LENGTH * 0.2)
+        entry_y1 = int(entry_y0 + LINE_LENGTH * 0.6)
 
         direction_to_delta = {
-            "N": (0, -WindowScale.line_length),
-            "S": (0, WindowScale.line_length),
-            "E": (WindowScale.line_length, 0),
-            "W": (-WindowScale.line_length, 0),
+            "N": (0, -LINE_LENGTH),
+            "S": (0, LINE_LENGTH),
+            "E": (LINE_LENGTH, 0),
+            "W": (-LINE_LENGTH, 0),
         }
 
         x0_coord = entry_x0
@@ -349,10 +357,10 @@ class OutputMaze():
             win_ptr (c_void_p): winポインタ
         """
         mlx.mlx_clear_window(mlx_ptr, win_ptr)
+        self._draw_maze_grid(mlx, mlx_ptr, win_ptr)
         if self.is_draw_route:
             self._draw_route(mlx, mlx_ptr, win_ptr)
         self._draw_endpoints(mlx, mlx_ptr, win_ptr)
-        self._draw_maze_grid(mlx, mlx_ptr, win_ptr)
 
     def _on_key(self, keycode: int, mlx_apps: dict[str, Any]) -> None:
         """
@@ -386,6 +394,12 @@ class OutputMaze():
             self._draw_maze(
                 mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
             )
+        if keycode == KeyCode.four:
+            self.is_animation = True
+            self._draw_maze(
+                mlx_apps["mlx"], mlx_apps["mlx_ptr"], mlx_apps["win_ptr"]
+            )
+            self.is_animation = False
 
     def output_maze(self) -> None:
         """
