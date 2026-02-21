@@ -1,5 +1,6 @@
 import sys
 from read_config_params import read_config_params, MazeParameters
+from maze_generate import MazeGenerator
 from output_maze.output_maze import OutputMaze
 from pydantic import ValidationError
 
@@ -17,6 +18,14 @@ def main() -> None:
     except (
         FileNotFoundError, ValueError, IndexError,
         ValidationError
+    ) as error:
+        print(f"Error: {error}")
+        return
+    try:
+        MazeGenerator(config_params)
+    except (
+        PermissionError, ValueError, IndexError,
+        TypeError, OSError
     ) as error:
         print(f"Error: {error}")
         return

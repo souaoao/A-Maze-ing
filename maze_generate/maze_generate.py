@@ -211,20 +211,24 @@ class MazeApp(ABC):
     # ファイル出力
     # ==============================
     def _write(self) -> None:
-        with open("output_file", "w", encoding="utf-8") as f:
-            row: List[int]
-            for row in self.grid:
-                cell: int
-                for cell in row:
-                    f.write(f"{cell:X}")
+        try:
+            with open("output_file", "w", encoding="utf-8") as f:
+                row: List[int]
+                for row in self.grid:
+                    cell: int
+                    for cell in row:
+                        f.write(f"{cell:X}")
+                    f.write("\n")
                 f.write("\n")
-            f.write("\n")
-            f.write(f"{self.entry[0]},{self.entry[1]}\n")
-            f.write(f"{self.exit[0]},{self.exit[1]}\n")
-            direction: str
-            for direction in self.shortest_path:
-                f.write(direction)
-            f.write("\n")
+                f.write(f"{self.entry[0]},{self.entry[1]}\n")
+                f.write(f"{self.exit[0]},{self.exit[1]}\n")
+                direction: str
+                for direction in self.shortest_path:
+                    f.write(direction)
+                f.write("\n")
+        except (PermissionError, OSError) as error:
+            raise from
+
 
 
 class DfsMaze(MazeApp):
