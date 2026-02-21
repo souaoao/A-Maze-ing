@@ -1,7 +1,6 @@
 from enum import Enum
 from .maze_parameter import MazeParameters
 from typing import Any
-from dataclasses import asdict
 
 
 class RequiredKeys(str, Enum):
@@ -43,20 +42,20 @@ def validate_config_parameters(
         MazeParameters: MazeParametersインスタンス
     """
     normalized_parameters: dict[str, Any] = {
-        "width": config_parameters[RequiredKeys.width],
-        "height": config_parameters[RequiredKeys.height],
-        "entry_coord": config_parameters[RequiredKeys.entry_coord],
-        "exit_coord": config_parameters[RequiredKeys.exit_coord],
-        "output_file": config_parameters[RequiredKeys.output_file],
-        "perfect": config_parameters[RequiredKeys.perfect],
+        "WIDTH": config_parameters[RequiredKeys.width],
+        "HEIGHT": config_parameters[RequiredKeys.height],
+        "ENTRY": config_parameters[RequiredKeys.entry_coord],
+        "EXIT": config_parameters[RequiredKeys.exit_coord],
+        "OUTPUT_FILE": config_parameters[RequiredKeys.output_file],
+        "PERFECT": config_parameters[RequiredKeys.perfect],
     }
 
     seed_value: str = config_parameters.get(OptionalKeys.seed)
     if seed_value is not None:
-        normalized_parameters["seed"] = seed_value
+        normalized_parameters["SEED"] = seed_value
     algorithm_type: str = config_parameters.get(OptionalKeys.algorithm)
     if algorithm_type is not None:
-        normalized_parameters["algorithm"] = algorithm_type
+        normalized_parameters["ALGORITHM"] = algorithm_type
     maze_parameter: MazeParameters = MazeParameters(**normalized_parameters)
-    dict_parameter: dict[str, Any] = asdict(maze_parameter)
-    return maze_parameter
+    dict_parameter: dict[str, Any] = maze_parameter.model_dump()
+    return dict_parameter

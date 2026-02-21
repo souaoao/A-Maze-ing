@@ -3,7 +3,7 @@ from typing import Optional
 from enum import Enum
 
 
-class AlgorithmType(str, Enum):
+class ALGORITHMType(str, Enum):
     """
     アルゴリズムのタイプのEnumサンプル
 
@@ -23,20 +23,20 @@ class MazeParameters(BaseModel):
         BaseModel (_type_): BaseModelクラス
 
     Raises:
-        ValueError: entry_coordが迷路サイズの外にある場合
-        ValueError: exit_coordが迷路サイズの外にある場合
+        ValueError: ENTRYが迷路サイズの外にある場合
+        ValueError: EXITが迷路サイズの外にある場合
         ValueError: outputファイルのパスが.txtで終わっていない場合
     """
-    width: int = Field(...)
-    height: int = Field(...)
-    entry_coord: tuple[int, int] = Field(...)
-    exit_coord: tuple[int, int] = Field(...)
-    output_file: str = Field(...)
-    perfect: bool = Field(...)
-    seed: Optional[int] = Field(None)
-    algorithm: Optional[str] = Field(None)
+    WIDTH: int = Field(...)
+    HEIGHT: int = Field(...)
+    ENTRY: tuple[int, int] = Field(...)
+    EXIT: tuple[int, int] = Field(...)
+    OUTPUT_FILE: str = Field(...)
+    PERFECT: bool = Field(...)
+    SEED: Optional[int] = Field(None)
+    ALGORITHM: Optional[str] = Field(None)
 
-    @field_validator("entry_coord", "exit_coord", mode="before")
+    @field_validator("ENTRY", "EXIT", mode="before")
     def parse_coord(
         cls,
         coord_string: str | tuple[int, int]
@@ -61,27 +61,31 @@ class MazeParameters(BaseModel):
         バリデート
 
         Raises:
-            ValueError: entry_coordが迷路サイズの外にある場合
-            ValueError: exit_coordが迷路サイズの外にある場合
+            ValueError: ENTRYが迷路サイズの外にある場合
+            ValueError: EXITが迷路サイズの外にある場合
             ValueError: outputファイルのパスが.txtで終わっていない場合
 
         Returns:
             MazeParameters: バリデート済みのMazeParametersインスタンス
         """
         if (
-            self.width < self.entry_coord[0]
-            or self.height < self.entry_coord[1]
+            self.ENTRY[0] < 0
+            or self.ENTRY[1] < 0
+            or self.WIDTH <= self.ENTRY[0]
+            or self.HEIGHT <= self.ENTRY[1]
         ):
             raise ValueError("Invalid entry coord (maze size < entry coord)")
         if (
-            self.width < self.exit_coord[0]
-            or self.height < self.exit_coord[1]
+            self.EXIT[0] < 0
+            or self.EXIT[1] < 0
+            or self.WIDTH <= self.EXIT[0]
+            or self.HEIGHT <= self.EXIT[1]
         ):
             raise ValueError("Invalid exit coord (maze size < exit coord)")
-        if not self.output_file.endswith(".txt"):
-            raise ValueError("output_file must end with '.txt'")
-        if self.algorithm is not None:
-            allowed = {item.value for item in AlgorithmType}
-            if self.algorithm not in allowed:
-                raise ValueError(f"algorithm must be one of {allowed}")
+        if not self.OUTPUT_FILE.endswith(".txt"):
+            raise ValueError("OUTPUT_FILE must end with '.txt'")
+        if self.ALGORITHM is not None:
+            allowed = {item.value for item in ALGORITHMType}
+            if self.ALGORITHM not in allowed:
+                raise ValueError(f"ALGORITHM must be one of {allowed}")
         return self
