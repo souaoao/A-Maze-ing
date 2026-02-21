@@ -11,8 +11,8 @@ class AlgorithmType(str, Enum):
         str (_type_): _description_
         Enum (_type_): _description_
     """
-    sample = "sample"
-    test = "test"
+    dfs = "DFS"
+    bfs = "BFS"
 
 
 class MazeParameters(BaseModel):

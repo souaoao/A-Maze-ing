@@ -1,5 +1,5 @@
 """output_maze package."""
 
-from .maze_model import OutputMaze
+from .output_maze import OutputMaze
 
 __all__ = ["OutputMaze"]
