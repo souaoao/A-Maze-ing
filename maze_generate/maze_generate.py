@@ -227,8 +227,7 @@ class MazeApp(ABC):
                     f.write(direction)
                 f.write("\n")
         except (PermissionError, OSError) as error:
-            raise from
-
+            raise RuntimeError("Failed to write output file") from error
 
 
 class DfsMaze(MazeApp):
