@@ -1,7 +1,7 @@
 from .maze_model import MazeModel
 from enum import Enum
 from mlx import Mlx
-from typing import Any
+from typing import Any, TextIO
 from ctypes import c_void_p
 import signal
 import time
@@ -50,7 +50,7 @@ class OutputMaze():
         Args:
             output_file (_type_): 迷路の生成結果が記録されたファイル
         """
-        self.output_file = output_file
+        self.output_file: str = output_file
         self.get_maze_info()
 
         self.line_colors: list[Colors] = [
@@ -65,8 +65,9 @@ class OutputMaze():
         self.exit_color: int = Colors.red
         self.route_color: int = Colors.blue
 
-        self.is_draw_route = False
-        self.is_animation = False
+        self.is_draw_route: bool = False
+        self.is_animation: bool = False
+        self._is_key_guide_printed: bool = False
 
     def get_maze_info(self) -> None:
         """
@@ -75,20 +76,21 @@ class OutputMaze():
         Raises:
             FileNotFoundError: ファイルが見つからない場合
         """
-        grid: list[str] = []
-
         try:
+            file: TextIO
             with open(self.output_file, "r") as file:
+                line: str
+                grid: list[str] = []
                 for line in file:
                     line = line.rstrip("\n")
                     if line == "":
                         break
                     grid.append(line)
-                entry_coord = next(file).rstrip("\n")
-                exit_coord = next(file).rstrip("\n")
-                route = next(file).rstrip("\n")
+                entry_coord: str = next(file).rstrip("\n")
+                exit_coord: str = next(file).rstrip("\n")
+                route: str = next(file).rstrip("\n")
         except FileNotFoundError as error:
-            raise FileNotFoundError(error) from error
+            raise FileNotFoundError(error)
 
         models: dict[str, Any] = {
             "grid": grid,
@@ -96,10 +98,10 @@ class OutputMaze():
             "exit_coord": exit_coord,
             "route": route
         }
-        self.maze_model = MazeModel(**models)
+        self.maze_model: MazeModel = MazeModel(**models)
         line_length = int(GenerateConfig.line_length)
-        self.window_width = line_length * len(self.grid[0]) + 1
-        self.window_height = line_length * len(self.grid) + 1
+        self.window_width: int = line_length * len(self.grid[0]) + 1
+        self.window_height: int = line_length * len(self.grid) + 1
 
     @property
     def grid(self) -> list[str]:
@@ -169,22 +171,22 @@ class OutputMaze():
             y2 (int): 終点のy座標
             color (int): 色
         """
-        dx = abs(x2 - x1)
-        dy = abs(y2 - y1)
-        sx = 1 if x1 < x2 else -1
-        sy = 1 if y1 < y2 else -1
-        err = dx - dy
+        dx: int = abs(x2 - x1)
+        dy: int = abs(y2 - y1)
+        sx: int = 1 if x1 < x2 else -1
+        sy: int = 1 if y1 < y2 else -1
+        delta: int = dx - dy
 
         while True:
             mlx.mlx_pixel_put(mlx_ptr, win_ptr, x1, y1, color)
             if x1 == x2 and y1 == y2:
                 break
-            err2 = 2 * err
-            if err2 > -dy:
-                err -= dy
+            delta2: int = 2 * delta
+            if delta2 > -dy:
+                delta -= dy
                 x1 += sx
-            if err2 < dx:
-                err += dx
+            if delta2 < dx:
+                delta += dx
                 y1 += sy
 
     def _draw_square(
@@ -205,6 +207,7 @@ class OutputMaze():
             y2 (int): 右下角のy座標
             color (int): カラーコード
         """
+        y_coord: int
         for y_coord in range(y1, y2):
             self._draw_straight_line(
                 mlx, mlx_ptr, win_ptr,
@@ -223,20 +226,26 @@ class OutputMaze():
             mlx_ptr (c_void_p): mlxポインタ
             win_ptr (c_void_p): winポインタ
         """
-        line = GenerateConfig.line_length
+        line: int = GenerateConfig.line_length
 
-        y_coord = 0
+        y_coord: int = 0
+        row: str
         for row in self.grid:
-            x_coord = 0
+            x_coord: int = 0
+            cell = str
             for cell in row:
-                cell_bits = int(cell, 16)
+                cell_bits: int = int(cell, 16)
 
-                north = cell_bits & 0b0001
-                east = cell_bits & 0b0010
-                south = cell_bits & 0b0100
-                west = cell_bits & 0b1000
+                north: int = cell_bits & 0b0001
+                east: int = cell_bits & 0b0010
+                south: int = cell_bits & 0b0100
+                west: int = cell_bits & 0b1000
 
-                x0, y0 = x_coord, y_coord
+                x0: int
+                y0: int
+                x1: int
+                y1: int
+                x0, y0= x_coord, y_coord
                 x1, y1 = x_coord + line, y_coord + line
 
                 if north:
@@ -280,15 +289,15 @@ class OutputMaze():
             mlx_ptr (c_void_p): mlxポインタ
             win_ptr (c_void_p): winポインタ
         """
-        entry_x0 = self.entry_coord[0] * GenerateConfig.line_length + 1
-        entry_x1 = entry_x0 + GenerateConfig.line_length - 1
-        entry_y0 = self.entry_coord[1] * GenerateConfig.line_length + 1
-        entry_y1 = entry_y0 + GenerateConfig.line_length - 1
+        entry_x0: int = self.entry_coord[0] * GenerateConfig.line_length + 1
+        entry_x1: int = entry_x0 + GenerateConfig.line_length - 1
+        entry_y0: int = self.entry_coord[1] * GenerateConfig.line_length + 1
+        entry_y1: int = entry_y0 + GenerateConfig.line_length - 1
 
-        exit_x0 = self.exit_coord[0] * GenerateConfig.line_length + 1
-        exit_x1 = exit_x0 + GenerateConfig.line_length - 2
-        exit_y0 = self.exit_coord[1] * GenerateConfig.line_length + 1
-        exit_y1 = exit_y0 + GenerateConfig.line_length - 1
+        exit_x0: int = self.exit_coord[0] * GenerateConfig.line_length + 1
+        exit_x1: int = exit_x0 + GenerateConfig.line_length - 2
+        exit_y0: int = self.exit_coord[1] * GenerateConfig.line_length + 1
+        exit_y1: int = exit_y0 + GenerateConfig.line_length - 1
 
         self._draw_square(
             mlx, mlx_ptr, win_ptr,
@@ -312,12 +321,12 @@ class OutputMaze():
             mlx_ptr (c_void_p): mlxポインタ
             win_ptr (c_void_p): winポインタ
         """
-        LINE_LENGTH = GenerateConfig.line_length
+        LINE_LENGTH: int = GenerateConfig.line_length
 
-        entry_x0 = int(self.entry_coord[0] * LINE_LENGTH + LINE_LENGTH * 0.2)
-        entry_x1 = int(entry_x0 + LINE_LENGTH * 0.6)
-        entry_y0 = int(self.entry_coord[1] * LINE_LENGTH + LINE_LENGTH * 0.2)
-        entry_y1 = int(entry_y0 + LINE_LENGTH * 0.6)
+        entry_x0: int = int(self.entry_coord[0] * LINE_LENGTH + LINE_LENGTH * 0.2)
+        entry_x1: int = int(entry_x0 + LINE_LENGTH * 0.6)
+        entry_y0: int = int(self.entry_coord[1] * LINE_LENGTH + LINE_LENGTH * 0.2)
+        entry_y1: int = int(entry_y0 + LINE_LENGTH * 0.6)
 
         direction_to_delta = {
             "N": (0, -LINE_LENGTH),
@@ -326,10 +335,11 @@ class OutputMaze():
             "W": (-LINE_LENGTH, 0),
         }
 
-        x0_coord = entry_x0
-        y0_coord = entry_y0
-        x1_coord = entry_x1
-        y1_coord = entry_y1
+        x0_coord: int = entry_x0
+        y0_coord: int = entry_y0
+        x1_coord: int = entry_x1
+        y1_coord: int = entry_y1
+        direction: str
         for direction in self.route:
             x_diff, y_diff = direction_to_delta[direction]
             x0_coord += x_diff
@@ -405,21 +415,26 @@ class OutputMaze():
         """
         迷路を出力するメインメソッド
         """
-        mlx = Mlx()
-        mlx_ptr = mlx.mlx_init()
-        win_ptr = mlx.mlx_new_window(
+        mlx: Mlx = Mlx()
+        mlx_ptr: c_void_p = mlx.mlx_init()
+        win_ptr: c_void_p = mlx.mlx_new_window(
             mlx_ptr,
             self.window_width, self.window_height,
             "A-Maze-ing"
         )
-        mlx_apps = {"mlx": mlx, "mlx_ptr": mlx_ptr, "win_ptr": win_ptr}
+        mlx_apps: dict[str, Any] = {"mlx": mlx, "mlx_ptr": mlx_ptr, "win_ptr": win_ptr}
 
         mlx.mlx_key_hook(win_ptr, self._on_key, mlx_apps)
         mlx.mlx_hook(win_ptr, 33, 0, self._on_close, mlx_apps)
-        previous_sigint_handler = signal.getsignal(signal.SIGINT)
+        previous_sigint_handler: _HANDLER = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         try:
             self._draw_maze(mlx, mlx_ptr, win_ptr)
+            print(
+                "Key controls: "
+                "ESC=close, 1=reload maze, 2=toggle route, "
+                "3=change wall color, 4=draw animation"
+            )
             mlx.mlx_loop(mlx_ptr)
         except FileNotFoundError as error:
             print(f"Error: {error}")

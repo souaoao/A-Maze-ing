@@ -1,5 +1,5 @@
 from .validate_config_parameters import validate_config_parameters
-from typing import Any
+from typing import Any, TextIO
 from .maze_parameter import MazeParameters
 
 
@@ -13,16 +13,18 @@ def parse_config_text(text: str) -> dict[str, Any]:
     Returns:
         dict: パース結果
     """
-    lines = text.splitlines()
+    lines: list[str] = text.splitlines()
     config_parameters: dict[str, Any] = {}
+
+    line: str
     for line in lines:
         if line.startswith("#"):
             continue
-        line_item = line.split("=")
-        key = line_item[0]
+        line_item: list[str] = line.split("=")
+        key: str = line_item[0]
         if key in config_parameters.keys():
             raise ValueError(f"Duplicate key: {key}")
-        value = line_item[1]
+        value: str = line_item[1]
         config_parameters[key] = value
     return config_parameters
 
@@ -37,7 +39,8 @@ def read_config_params(config_file: str) -> MazeParameters:
     Returns:
         MazeParameters: 迷路のパラメータインスタンス
     """
+    file_obj: TextIO
     with open(config_file, "r") as file_obj:
-        config_text = file_obj.read()
+        config_text: str = file_obj.read()
     config_parameters: dict[str, Any] = parse_config_text(config_text)
     return validate_config_parameters(config_parameters)
