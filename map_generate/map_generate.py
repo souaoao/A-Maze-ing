@@ -1,5 +1,5 @@
 from random import Random
-from typing import List, Tuple, Dict, NamedTuple
+from typing import List, Tuple, Dict, NamedTuple, Optional, Any
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -26,7 +26,7 @@ DIRECTIONS: Dict[str, Direction] = {
 
 
 class MazeGenerator(ABC):
-    def __init__(self, config: Dict) -> None:
+    def __init__(self, config: Dict[str, Any]) -> None:
         self.width: int = config["WIDTH"]
         self.height: int = config["HEIGHT"]
         self.entry: Tuple[int, int] = config["ENTRY"]
@@ -39,9 +39,10 @@ class MazeGenerator(ABC):
         if self.exit in self.forty_two:
             raise ValueError("Exit cannot be inside 42 area")
         self.grid: List[List[int]] = []
+        self.shortest_path: List[str] = []
 
     @abstractmethod
-    def generate_dfs(self) -> List[List[int]]:
+    def generate(self) -> None:
         pass
 
     # ==============================
@@ -165,6 +166,66 @@ class MazeGenerator(ABC):
         self.grid[y][x] &= mask_wall
         self.grid[next_y][next_x] &= mask_opposite
 
+    # ==============================
+    # 最短経路（BFS）
+    # ==============================
+    def _search_shortest_path(self) -> None:
+        queue: deque[Tuple[int, int]] = deque([self.entry])
+        came_from: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {
+            self.entry: None}
+
+        while queue:
+            x: int
+            y: int
+            x, y = queue.popleft()
+            if (x, y) == self.exit:
+                break
+            d: Direction
+            for d in DIRECTIONS.values():
+                next_x: int = x + d.x
+                next_y: int = y + d.y
+                if not (self.grid[y][x] & d.wall):
+                    if (next_x, next_y) not in came_from:
+                        came_from[(next_x, next_y)] = (x, y)
+                        queue.append((next_x, next_y))
+        current: Tuple[int, int] = self.exit
+        while came_from[current] is not None:
+            prev: Tuple[int, int] = came_from[current]
+            if prev is None:
+                break
+            dx: int = current[0] - prev[0]
+            dy: int = current[1] - prev[1]
+            if dx == 1:
+                self.shortest_path.append("E")
+            elif dx == -1:
+                self.shortest_path.append("W")
+            elif dy == 1:
+                self.shortest_path.append("S")
+            elif dy == -1:
+                self.shortest_path.append("N")
+
+            current = prev
+        self.shortest_path.reverse()
+
+    # ==============================
+    # ファイル出力
+    # ==============================
+    def _write(self) -> None:
+        with open("output_file", "w", encoding="utf-8") as f:
+            row: List[int]
+            for row in self.grid:
+                cell: int
+                for cell in row:
+                    f.write(f"{cell:X}")
+                f.write("\n")
+            f.write("\n")
+            f.write(f"{self.entry[0]},{self.entry[1]}\n")
+            f.write(f"{self.exit[0]},{self.exit[1]}\n")
+            direction: str
+            for direction in self.shortest_path:
+                f.write(direction)
+            f.write("\n")
+
 
 class DfsMazeGenerator(MazeGenerator):
     def __init__(self, config: Dict):
@@ -173,7 +234,7 @@ class DfsMazeGenerator(MazeGenerator):
     # ==============================
     # 迷路生成（DFS）深さ優先探索
     # ==============================
-    def generate(self) -> List[List[int]]:
+    def generate(self) -> None:
         self.grid: List[List[int]] = [[
             0b1111 for _ in range(self.width)] for _ in range(self.height)]
         visited: List[List[bool]] = [[
@@ -197,17 +258,16 @@ class DfsMazeGenerator(MazeGenerator):
         dfs(self.entry[0], self.entry[1])
         if not self.perfect:
             self._add_extra_connection()
-        return self.grid
 
 
 class BfsMazeGenerator(MazeGenerator):
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict) -> None:
         super().__init__(config)
 
     # ==============================
     # 迷路生成（BFS）幅優先探索
     # ==============================
-    def generate(self) -> List[List[int]]:
+    def generate(self) -> None:
         self.grid: List[List[int]] = [[
             0b1111 for _ in range(self.width)] for _ in range(self.height)]
         visited: List[List[bool]] = [[
@@ -215,7 +275,7 @@ class BfsMazeGenerator(MazeGenerator):
         for (x, y) in self.forty_two:
             visited[y][x] = True
 
-        queue: deque = deque()
+        queue: deque[Tuple[int, int]] = deque()
         visited[self.entry[1]][self.entry[0]] = True
         queue.append(self.entry)
         while queue:
@@ -235,4 +295,15 @@ class BfsMazeGenerator(MazeGenerator):
                         queue.append((next_x, next_y))
         if not self.perfect:
             self._add_extra_connection()
-        return self.grid
+
+
+class Maze:
+    def __init__(self, config: Dict[str, Any]) -> None:
+        self.algorithm: Optional[str] = config["ALGORITHM"]
+        if self.algorithm == "DFS":
+            self.map: MazeGenerator = DfsMazeGenerator(config)
+        else:
+            self.map: MazeGenerator = BfsMazeGenerator(config)
+        self.map.generate()
+        self.map._search_shortest_path()
+        self.map._write()
