@@ -25,7 +25,7 @@ DIRECTIONS: Dict[str, Direction] = {
 }
 
 
-class MazeGenerator(ABC):
+class MazeApp(ABC):
     def __init__(self, config: Dict[str, Any]) -> None:
         self.width: int = config["WIDTH"]
         self.height: int = config["HEIGHT"]
@@ -227,7 +227,7 @@ class MazeGenerator(ABC):
             f.write("\n")
 
 
-class DfsMazeGenerator(MazeGenerator):
+class DfsMaze(MazeApp):
     def __init__(self, config: Dict):
         super().__init__(config)
 
@@ -260,7 +260,7 @@ class DfsMazeGenerator(MazeGenerator):
             self._add_extra_connection()
 
 
-class BfsMazeGenerator(MazeGenerator):
+class BfsMaze(MazeApp):
     def __init__(self, config: Dict) -> None:
         super().__init__(config)
 
@@ -297,13 +297,13 @@ class BfsMazeGenerator(MazeGenerator):
             self._add_extra_connection()
 
 
-class Maze:
+class MazeGenerator:
     def __init__(self, config: Dict[str, Any]) -> None:
         self.algorithm: Optional[str] = config["ALGORITHM"]
         if self.algorithm == "DFS":
-            self.map: MazeGenerator = DfsMazeGenerator(config)
+            self.map: MazeApp = DfsMaze(config)
         else:
-            self.map: MazeGenerator = BfsMazeGenerator(config)
+            self.map: MazeApp = BfsMaze(config)
         self.map.generate()
         self.map._search_shortest_path()
         self.map._write()
