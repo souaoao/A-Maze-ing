@@ -1,6 +1,7 @@
 from enum import Enum
 from .maze_parameter import MazeParameters
 from typing import Any
+from dataclasses import asdict
 
 
 class RequiredKeys(str, Enum):
@@ -31,7 +32,7 @@ class OptionalKeys(str, Enum):
 
 def validate_config_parameters(
     config_parameters: dict[str, str]
-) -> MazeParameters:
+) -> dict[str, Any]:
     """
     dictをインスタンスに変換する
 
@@ -57,4 +58,5 @@ def validate_config_parameters(
     if algorithm_type is not None:
         normalized_parameters["algorithm"] = algorithm_type
     maze_parameter: MazeParameters = MazeParameters(**normalized_parameters)
+    dict_parameter: dict[str, Any] = asdict(maze_parameter)
     return maze_parameter

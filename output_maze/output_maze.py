@@ -1,4 +1,5 @@
 from .maze_model import MazeModel
+from maze_generate import MazeGenerator
 from enum import Enum
 from mlx import Mlx
 from typing import Any, TextIO
