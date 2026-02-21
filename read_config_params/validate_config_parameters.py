@@ -50,10 +50,10 @@ def validate_config_parameters(
         "PERFECT": config_parameters[RequiredKeys.perfect],
     }
 
-    seed_value: str = config_parameters.get(OptionalKeys.seed)
+    seed_value: str | None = config_parameters.get(OptionalKeys.seed)
     if seed_value is not None:
         normalized_parameters["SEED"] = seed_value
-    algorithm_type: str = config_parameters.get(OptionalKeys.algorithm)
+    algorithm_type: str | None = config_parameters.get(OptionalKeys.algorithm)
     if algorithm_type is not None:
         normalized_parameters["ALGORITHM"] = algorithm_type
     maze_parameter: MazeParameters = MazeParameters(**normalized_parameters)

@@ -234,7 +234,7 @@ class OutputMaze():
         row: str
         for row in self.grid:
             x_coord: int = 0
-            cell = str
+            cell: str
             for cell in row:
                 cell_bits: int = int(cell, 16)
 
@@ -298,7 +298,7 @@ class OutputMaze():
             win_ptr (c_void_p): winポインタ
         """
         entry_x0: int = self.entry_coord[0] * GenerateConfig.line_length + 1
-        entry_x1: int = entry_x0 + GenerateConfig.line_length - 1
+        entry_x1: int = entry_x0 + GenerateConfig.line_length - 2
         entry_y0: int = self.entry_coord[1] * GenerateConfig.line_length + 1
         entry_y1: int = entry_y0 + GenerateConfig.line_length - 1
 
