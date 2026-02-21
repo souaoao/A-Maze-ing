@@ -100,6 +100,7 @@ class MazeApp(ABC):
     # ==============================
     def _build_forty_two(self) -> set[Tuple[int, int]]:
         if self.width < 9 or self.height < 7:
+            print("Grid too small to build '42'")
             return set()
         center_x: int = self.width // 2
         center_y: int = self.height // 2
