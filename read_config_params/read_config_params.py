@@ -1,6 +1,5 @@
 from .validate_config_parameters import validate_config_parameters
 from typing import Any, TextIO
-from .maze_parameter import MazeParameters
 
 
 def parse_config_text(text: str) -> dict[str, Any]:
@@ -29,7 +28,7 @@ def parse_config_text(text: str) -> dict[str, Any]:
     return config_parameters
 
 
-def read_config_params(config_file: str) -> MazeParameters:
+def read_config_params(config_file: str) -> dict[str, Any]:
     """
     config.txtの内容を読み取り、値をバリデートしてMazeParametersインスタンスとして返す
 

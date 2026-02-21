@@ -44,14 +44,15 @@ class OutputMaze():
     """
     maze.txt（または任意のファイルパス）から迷路を作成するクラス
     """
-    def __init__(self, output_file: str) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         output_fileの内容を行い、MazeModelクラスでバリデートを行う
 
         Args:
             output_file (_type_): 迷路の生成結果が記録されたファイル
         """
-        self.output_file: str = output_file
+        self.output_file: str = config["OUTPUT_FILE"]
+        self.config: dict[str, Any] = config
         self.get_maze_info()
 
         self.line_colors: list[Colors] = [
@@ -246,7 +247,7 @@ class OutputMaze():
                 y0: int
                 x1: int
                 y1: int
-                x0, y0= x_coord, y_coord
+                x0, y0 = x_coord, y_coord
                 x1, y1 = x_coord + line, y_coord + line
 
                 if north:
@@ -271,6 +272,12 @@ class OutputMaze():
                     self._draw_straight_line(
                         mlx, mlx_ptr, win_ptr,
                         x0, y0, x0, y1,
+                        self.line_color
+                    )
+                if north and east and south and west:
+                    self._draw_square(
+                        mlx, mlx_ptr, win_ptr,
+                        x0, y0, x1, y1,
                         self.line_color
                     )
                 x_coord += line
@@ -324,9 +331,13 @@ class OutputMaze():
         """
         LINE_LENGTH: int = GenerateConfig.line_length
 
-        entry_x0: int = int(self.entry_coord[0] * LINE_LENGTH + LINE_LENGTH * 0.2)
+        entry_x0: int = int(
+            self.entry_coord[0] * LINE_LENGTH + LINE_LENGTH * 0.2
+        )
         entry_x1: int = int(entry_x0 + LINE_LENGTH * 0.6)
-        entry_y0: int = int(self.entry_coord[1] * LINE_LENGTH + LINE_LENGTH * 0.2)
+        entry_y0: int = int(
+            self.entry_coord[1] * LINE_LENGTH + LINE_LENGTH * 0.2
+        )
         entry_y1: int = int(entry_y0 + LINE_LENGTH * 0.6)
 
         direction_to_delta = {
@@ -385,8 +396,13 @@ class OutputMaze():
             mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
         if keycode == KeyCode.one:
             try:
+                MazeGenerator(self.config)
                 self.get_maze_info()
-            except FileNotFoundError as error:
+            except (
+                FileNotFoundError,
+                PermissionError, ValueError, IndexError,
+                TypeError, OSError, RecursionError
+            ) as error:
                 print(f"Error: {error}")
                 mlx_apps["mlx"].mlx_loop_exit(mlx_apps["mlx_ptr"])
             self._draw_maze(
@@ -423,11 +439,13 @@ class OutputMaze():
             self.window_width, self.window_height,
             "A-Maze-ing"
         )
-        mlx_apps: dict[str, Any] = {"mlx": mlx, "mlx_ptr": mlx_ptr, "win_ptr": win_ptr}
+        mlx_apps: dict[str, Any] = {
+            "mlx": mlx, "mlx_ptr": mlx_ptr, "win_ptr": win_ptr
+        }
 
         mlx.mlx_key_hook(win_ptr, self._on_key, mlx_apps)
         mlx.mlx_hook(win_ptr, 33, 0, self._on_close, mlx_apps)
-        previous_sigint_handler: _HANDLER = signal.getsignal(signal.SIGINT)
+        previous_sigint_handler = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         try:
             self._draw_maze(mlx, mlx_ptr, win_ptr)
@@ -437,7 +455,11 @@ class OutputMaze():
                 "3=change wall color, 4=draw animation"
             )
             mlx.mlx_loop(mlx_ptr)
-        except FileNotFoundError as error:
+        except (
+            FileNotFoundError,
+            PermissionError, ValueError, IndexError,
+            TypeError, OSError, RecursionError
+        ) as error:
             print(f"Error: {error}")
         finally:
             signal.signal(signal.SIGINT, previous_sigint_handler)

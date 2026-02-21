@@ -31,6 +31,7 @@ class MazeApp(ABC):
         self.height: int = config["HEIGHT"]
         self.entry: Tuple[int, int] = config["ENTRY"]
         self.exit: Tuple[int, int] = config["EXIT"]
+        self.output_file: str = config["OUTPUT_FILE"]
         self.perfect: bool = config["PERFECT"]
         self.rng: Random = Random(config["SEED"])
         self.forty_two: set[Tuple[int, int]] = self._build_forty_two()
@@ -212,7 +213,7 @@ class MazeApp(ABC):
     # ==============================
     def _write(self) -> None:
         try:
-            with open("output_file", "w", encoding="utf-8") as f:
+            with open(self.output_file, "w", encoding="utf-8") as f:
                 row: List[int]
                 for row in self.grid:
                     cell: int
