@@ -3,7 +3,7 @@ from typing import Optional
 from enum import Enum
 
 
-class ALGORITHMType(str, Enum):
+class AlgorithmType(str, Enum):
     """
     アルゴリズムのタイプのEnumサンプル
 
@@ -69,6 +69,11 @@ class MazeParameters(BaseModel):
             MazeParameters: バリデート済みのMazeParametersインスタンス
         """
         if (
+            self.ENTRY[0] == self.EXIT[0]
+            and self.ENTRY[1] == self.EXIT[1]
+        ):
+            raise ValueError("Entry and exit coordinates must be different.")
+        if (
             self.ENTRY[0] < 0
             or self.ENTRY[1] < 0
             or self.WIDTH <= self.ENTRY[0]
@@ -85,7 +90,7 @@ class MazeParameters(BaseModel):
         if not self.OUTPUT_FILE.endswith(".txt"):
             raise ValueError("OUTPUT_FILE must end with '.txt'")
         if self.ALGORITHM is not None:
-            allowed = {item.value for item in ALGORITHMType}
+            allowed = {item.value for item in AlgorithmType}
             if self.ALGORITHM not in allowed:
-                raise ValueError(f"ALGORITHM must be one of {allowed}")
+                raise ValueError(f"algorithm must be one of {allowed}")
         return self
