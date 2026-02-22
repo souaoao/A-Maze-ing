@@ -14,4 +14,4 @@ name = "mazegen"
 version = "1.0.0"
 
 [tool.setuptools]
-py-modules = ["mazegen"]
+packages = ["mazegen"]
