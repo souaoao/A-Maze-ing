@@ -1,7 +1,7 @@
 import sys
 from typing import Any
 from read_config_params import read_config_params
-from maze_generate import MazeGenerator
+from mazegen import MazeGenerator
 from output_maze.output_maze import OutputMaze
 from pydantic import ValidationError
 

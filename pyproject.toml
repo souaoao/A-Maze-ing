@@ -1,6 +1,10 @@
-[tool.mypy]
-exclude = '(^\.venv/|^mlx/|^mlx-2\.2\.dist-info/)'
+[build-system]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
 
-[[tool.mypy.overrides]]
-module = ["mlx", "mlx.*"]
-ignore_errors = true
+[project]
+name = "mazegen"
+version = "1.0.0"
+
+[tool.setuptools]
+packages = ["mazegen"]
