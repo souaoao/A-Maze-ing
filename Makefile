@@ -39,6 +39,6 @@ lint: install
 	$(FLAKE8) .
 	$(MYPY) . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-build: install
+build:
 	$(PYTHON) -m pip install build
 	$(PYTHON) -m build
