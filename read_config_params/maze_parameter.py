@@ -27,8 +27,8 @@ class MazeParameters(BaseModel):
         ValueError: EXITが迷路サイズの外にある場合
         ValueError: outputファイルのパスが.txtで終わっていない場合
     """
-    WIDTH: int = Field(...)
-    HEIGHT: int = Field(...)
+    WIDTH: int = Field(..., ge=1)
+    HEIGHT: int = Field(..., ge=1)
     ENTRY: tuple[int, int] = Field(...)
     EXIT: tuple[int, int] = Field(...)
     OUTPUT_FILE: str = Field(...)
@@ -68,24 +68,16 @@ class MazeParameters(BaseModel):
         Returns:
             MazeParameters: バリデート済みのMazeParametersインスタンス
         """
+        if any(coord < 0 for coord in (*self.ENTRY, *self.EXIT)):
+            raise ValueError("End point coordinates must be non-negative.")
         if (
             self.ENTRY[0] == self.EXIT[0]
             and self.ENTRY[1] == self.EXIT[1]
         ):
             raise ValueError("Entry and exit coordinates must be different.")
-        if (
-            self.ENTRY[0] < 0
-            or self.ENTRY[1] < 0
-            or self.WIDTH <= self.ENTRY[0]
-            or self.HEIGHT <= self.ENTRY[1]
-        ):
+        if self.WIDTH <= self.ENTRY[0] or self.HEIGHT <= self.ENTRY[1]:
             raise ValueError("Invalid entry coord (maze size < entry coord)")
-        if (
-            self.EXIT[0] < 0
-            or self.EXIT[1] < 0
-            or self.WIDTH <= self.EXIT[0]
-            or self.HEIGHT <= self.EXIT[1]
-        ):
+        if self.WIDTH <= self.EXIT[0] or self.HEIGHT <= self.EXIT[1]:
             raise ValueError("Invalid exit coord (maze size < exit coord)")
         if not self.OUTPUT_FILE.endswith(".txt"):
             raise ValueError("OUTPUT_FILE must end with '.txt'")
