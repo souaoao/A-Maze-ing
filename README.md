@@ -3,7 +3,7 @@
 # A-Maze-ing
 
 ## Description
-本プロジェクトは、42 Rank02 の課題向けに作成した Python 製の迷路生成・可視化プログラムである。  
+本プロジェクトは、42 Rank02 の課題向けに作成した Python 製の迷路生成・可視化プログラムである。
 以下の機能を実装している。
 
 - 設定ファイル（`KEY=VALUE`）の読み込み
@@ -86,7 +86,7 @@ make clean
 ```
 
 ### Config File Format
-1 行につき 1 つの `KEY=VALUE` を記述する。  
+1 行につき 1 つの `KEY=VALUE` を記述する。
 `#` で始まる行はコメントとして無視する。
 
 ### Mandatory keys
@@ -155,7 +155,7 @@ PERFECT=True
   - 3x3 完全開放の禁止
 
 ### Reusable Part (`mazegen`)
-再利用対象はリポジトリルートの `mazegen` パッケージであり、  
+再利用対象はリポジトリルートの `mazegen` パッケージであり、
 主なエントリーポイントは `MazeGenerator` クラスである。
 
 #### Basic usage
@@ -183,7 +183,7 @@ generator = MazeGenerator(config)
 - 完全迷路モード: `PERFECT`
 
 #### 生成構造と解へのアクセス
-`MazeGenerator` は `generator.map` に迷路オブジェクトを保持する。  
+`MazeGenerator` は `generator.map` に迷路オブジェクトを保持する。
 以下にアクセス可能である。
 
 - `generator.map.grid`（壁ビットの2次元配列）
@@ -194,7 +194,7 @@ generator = MazeGenerator(config)
 ### Team & Project Management
 #### 役割分担
 - `smiyata`: config.txtのパース及びバリデーション, 迷路の表示機能, 実行環境の作成
-- `hwakatsu`:
+- `hwakatsu`: 迷路生成アルゴリズムの設計・実装、最短経路計算の実装、壁ビット構造の設計、再利用可能な `mazegen` パッケージの構築、追加制約ロジック（3x3 完全開放禁止・「42」閉鎖処理・外周制約）の設計と実装
 
 #### 計画と実際
 - 初期計画
