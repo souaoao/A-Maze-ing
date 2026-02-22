@@ -4,3 +4,14 @@ exclude = '(^\.venv/|^mlx/|^mlx-2\.2\.dist-info/)'
 [[tool.mypy.overrides]]
 module = ["mlx", "mlx.*"]
 ignore_errors = true
+
+[build-system]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mazegen"
+version = "1.0.0"
+
+[tool.setuptools]
+py-modules = ["mazegen"]

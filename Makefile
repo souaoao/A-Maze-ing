@@ -30,6 +30,7 @@ clean:
 	rm -rf $(VENV)
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 	rm -rf .mypy_cache
+	rm -rf maze.txt
 
 lint: install
 	$(FLAKE8) .
