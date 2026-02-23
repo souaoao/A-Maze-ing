@@ -214,7 +214,7 @@ class MazeApp(ABC):
                         queue.append((next_x, next_y))
         current: Tuple[int, int] = self.exit
         while came_from[current] is not None:
-            prev: Tuple[int, int] = came_from[current]
+            prev: Tuple[int, int] | None = came_from[current]
             if prev is None:
                 break
             dx: int = current[0] - prev[0]
@@ -315,18 +315,18 @@ class BfsMaze(MazeApp):
         visited[self.entry[1]][self.entry[0]] = True
         queue.append(self.entry)
         while queue:
-            x: int
-            y: int
-            x, y = queue.popleft()
+            current_x: int
+            current_y: int
+            current_x, current_y = queue.popleft()
             directions: List[Direction] = list(DIRECTIONS.values())
             self.rng.shuffle(directions)
             d: Direction
             for d in directions:
-                next_x: int = x + d.x
-                next_y: int = y + d.y
-                if self._can_break_wall(x, y, d):
+                next_x: int = current_x + d.x
+                next_y: int = current_y + d.y
+                if self._can_break_wall(current_x, current_y, d):
                     if not visited[next_y][next_x]:
-                        self._break_wall(x, y, d)
+                        self._break_wall(current_x, current_y, d)
                         visited[next_y][next_x] = True
                         queue.append((next_x, next_y))
         if not self.perfect:
@@ -339,10 +339,11 @@ class MazeGenerator:
     """
     def __init__(self, config: Dict[str, Any]) -> None:
         self.algorithm: Optional[str] = config["ALGORITHM"]
+        self.map: MazeApp
         if self.algorithm == "BFS":
-            self.map: MazeApp = BfsMaze(config)
+            self.map = BfsMaze(config)
         else:
-            self.map: MazeApp = DfsMaze(config)
+            self.map = DfsMaze(config)
         self.map.generate()
         self.map._search_shortest_path()
         self.map._write()

@@ -18,7 +18,7 @@ def main() -> None:
         config_params: dict[str, Any] = read_config_params(sys.argv[1])
     except (
         FileNotFoundError, ValueError, IndexError,
-        ValidationError
+        ValidationError, KeyError
     ) as error:
         print(f"Error: {error}")
         return
