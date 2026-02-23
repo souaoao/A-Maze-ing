@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by smiyata.*
+*This project has been created as part of the 42 curriculum by smiyata, hwakatsu.*
 
 # A-Maze-ing
 
@@ -146,13 +146,9 @@ PERFECT=True
 - `DFS`（深さ優先・再帰バックトラッカー）
 - `BFS`（幅優先展開）
 
-#### この選択理由
-- 隣接セルの壁整合性を維持しやすい
-- 方向シャッフルで自然にランダム化できる
-- 追加制約と両立しやすい
-  - 外周壁を壊さない
-  - 「42」領域を閉鎖セルとして保護
-  - 3x3 完全開放の禁止
+#### このアルゴリズムの選択理由
+- 異なる探索戦略（DFS・BFS）の挙動を比較し、理解を深めるため
+- 実装方法（再帰／イテレーティブ処理）の違いを学ぶため
 
 ### Reusable Part (`mazegen`)
 再利用対象はリポジトリルートの `mazegen` パッケージであり、
