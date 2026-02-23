@@ -330,7 +330,7 @@ class MazeGenerator:
     """
     def __init__(self, config: Dict[str, Any]) -> None:
         self.algorithm: Optional[str] = config["ALGORITHM"]
-        if self.algorithm == "DFS":
+        if self.algorithm == "BFS":
             self.map: MazeApp = DfsMaze(config)
         else:
             self.map: MazeApp = BfsMaze(config)
