@@ -84,16 +84,16 @@ class MazeApp(ABC):
             return False
         return True
 
-    def _add_extra_connection(self, probability: float = 0.05) -> None:
+    def _add_extra_connection(self) -> None:
         """
-        不完全迷路用に追加通路を確率的に開通させる
+        不完全迷路用に追加通路を開通させる
         """
         for y in range(self.height):
             for x in range(self.width):
                 for d in (DIRECTIONS["to_east"], DIRECTIONS["to_south"]):
                     if self._can_break_wall(x, y, d):
-                        if self.rng.random() < probability:
-                            self._break_wall(x, y, d)
+                        self._break_wall(x, y, d)
+                        return
 
     def _is_outer_wall(self, x: int, y: int, d: Direction) -> bool:
         """
