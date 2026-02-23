@@ -86,7 +86,7 @@ class MazeApp(ABC):
 
     def _add_extra_connection(self, probability: float = 0.05) -> None:
         """
-        不完全迷路用に追加通路を確率的に開通させる
+        不完全迷路用に追加通路を確率的に開通させる(絶対にひとつは壊す)
         """
         is_break: bool = False
         for y in range(self.height):
