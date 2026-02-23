@@ -1,3 +1,8 @@
+"""
+迷路生成および最短経路計算を行うコアモジュール
+DFS/BFS による迷路生成、3x3全開放禁止、「42」保護領域制御、
+最短経路探索およびファイル出力機能を提供する
+"""
 from random import Random
 from typing import List, Tuple, Dict, NamedTuple, Optional, Any
 from abc import ABC, abstractmethod
@@ -11,12 +16,16 @@ WEST: int = 0b1000
 
 
 class Direction(NamedTuple):
+    """
+    隣接セルへの移動情報と壁ビットを保持する構造体
+    """
     x: int
     y: int
     wall: int
     opposite: int
 
 
+# 各方向への移動量と壁ビット対応表
 DIRECTIONS: Dict[str, Direction] = {
     "to_north": Direction(0, -1, NORTH, SOUTH),
     "to_east": Direction(1, 0, EAST, WEST),
@@ -26,6 +35,10 @@ DIRECTIONS: Dict[str, Direction] = {
 
 
 class MazeApp(ABC):
+    """
+    迷路生成・制約管理・最短経路計算・出力を担う基底クラス
+    サブクラスは generate() を実装すること
+    """
     def __init__(self, config: Dict[str, Any]) -> None:
         self.width: int = config["WIDTH"]
         self.height: int = config["HEIGHT"]
@@ -44,12 +57,12 @@ class MazeApp(ABC):
 
     @abstractmethod
     def generate(self) -> None:
-        pass
+        raise NotImplementedError
 
-    # ==============================
-    # 壁壊していいか条件
-    # ==============================
     def _can_break_wall(self, x: int, y: int, d: Direction) -> bool:
+        """
+        指定方向の壁を壊してよいか判定する
+        """
         next_x: int = x + d.x
         next_y: int = y + d.y
         # 範囲外
@@ -71,10 +84,10 @@ class MazeApp(ABC):
             return False
         return True
 
-    # ==============================
-    # 不完全迷路生成
-    # ==============================
     def _add_extra_connection(self, probability: float = 0.05) -> None:
+        """
+        不完全迷路用に追加通路を確率的に開通させる
+        """
         for y in range(self.height):
             for x in range(self.width):
                 for d in (DIRECTIONS["to_east"], DIRECTIONS["to_south"]):
@@ -82,10 +95,10 @@ class MazeApp(ABC):
                         if self.rng.random() < probability:
                             self._break_wall(x, y, d)
 
-    # ==============================
-    # 外壁かどうかチェック
-    # ==============================
     def _is_outer_wall(self, x: int, y: int, d: Direction) -> bool:
+        """
+        外壁に該当するかを判定する
+        """
         if d.wall == NORTH and y == 0:
             return True
         if d.wall == SOUTH and y == self.height - 1:
@@ -96,10 +109,10 @@ class MazeApp(ABC):
             return True
         return False
 
-    # ==============================
-    # 42マスかどうかチェック
-    # ==============================
     def _build_forty_two(self) -> set[Tuple[int, int]]:
+        """
+        保護領域「42」の座標集合を構築する
+        """
         if self.width < 9 or self.height < 7:
             print("Grid too small to build '42'")
             return set()
@@ -117,10 +130,10 @@ class MazeApp(ABC):
             (center_x + 2, center_y + 2), (center_x + 3, center_y + 2),
         }
 
-    # ==============================
-    # 左上を基点にして３×３になるかどうか
-    # ==============================
     def _is_three_by_three_fully_open(self, x: int, y: int) -> bool:
+        """
+        左上基準の3×3領域が完全開放状態か判定する
+        """
         if x < 0 or y < 0:
             return False
         if x + 2 >= self.width or y + 2 >= self.height:
@@ -135,11 +148,11 @@ class MazeApp(ABC):
                         return False
         return True
 
-    # ==============================
-    # ３×３になるかどうか
-    # ==============================
     def _is_would_create_three_by_three_open_breaking(
             self, x: int, y: int, d: Direction) -> bool:
+        """
+        壁破壊により3×3全開放が発生するか判定する
+        """
         next_x: int = x + d.x
         next_y: int = y + d.y
 
@@ -157,10 +170,10 @@ class MazeApp(ABC):
 
         return False
 
-    # ==============================
-    # 壁壊す
-    # ==============================
     def _break_wall(self, x: int, y: int, d: Direction) -> None:
+        """
+        指定方向の壁を壊す
+        """
         next_x: int = x + d.x
         next_y: int = y + d.y
         mask_wall: int = (~d.wall) & 0b1111
@@ -168,10 +181,10 @@ class MazeApp(ABC):
         self.grid[y][x] &= mask_wall
         self.grid[next_y][next_x] &= mask_opposite
 
-    # ==============================
-    # 最短経路（BFS）
-    # ==============================
     def _search_shortest_path(self) -> None:
+        """
+        BFSにより ENTRY から EXIT までの最短経路を求める
+        """
         queue: deque[Tuple[int, int]] = deque([self.entry])
         came_from: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {
             self.entry: None}
@@ -209,10 +222,12 @@ class MazeApp(ABC):
             current = prev
         self.shortest_path.reverse()
 
-    # ==============================
-    # ファイル出力
-    # ==============================
     def _write(self) -> None:
+        """
+        迷路情報を指定ファイルへ書き出す
+        Raises:
+            RuntimeError: ファイル書き込みに失敗した場合
+        """
         try:
             with open(self.output_file, "w", encoding="utf-8") as f:
                 row: List[int]
@@ -233,13 +248,16 @@ class MazeApp(ABC):
 
 
 class DfsMaze(MazeApp):
+    """
+    DFS（深さ優先探索）による迷路生成実装
+    """
     def __init__(self, config: Dict):
         super().__init__(config)
 
-    # ==============================
-    # 迷路生成（DFS）深さ優先探索
-    # ==============================
     def generate(self) -> None:
+        """
+        再帰的バックトラッカー方式で迷路を生成する
+        """
         self.grid: List[List[int]] = [[
             0b1111 for _ in range(self.width)] for _ in range(self.height)]
         visited: List[List[bool]] = [[
@@ -266,13 +284,16 @@ class DfsMaze(MazeApp):
 
 
 class BfsMaze(MazeApp):
+    """
+    BFS（幅優先探索）による迷路生成実装
+    """
     def __init__(self, config: Dict) -> None:
         super().__init__(config)
 
-    # ==============================
-    # 迷路生成（BFS）幅優先探索
-    # ==============================
     def generate(self) -> None:
+        """
+        幅優先展開により迷路を生成する
+        """
         self.grid: List[List[int]] = [[
             0b1111 for _ in range(self.width)] for _ in range(self.height)]
         visited: List[List[bool]] = [[
@@ -303,6 +324,9 @@ class BfsMaze(MazeApp):
 
 
 class MazeGenerator:
+    """
+    設定に応じて迷路生成・最短経路計算・出力を実行するクラス
+    """
     def __init__(self, config: Dict[str, Any]) -> None:
         self.algorithm: Optional[str] = config["ALGORITHM"]
         if self.algorithm == "DFS":
