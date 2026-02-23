@@ -331,9 +331,9 @@ class MazeGenerator:
     def __init__(self, config: Dict[str, Any]) -> None:
         self.algorithm: Optional[str] = config["ALGORITHM"]
         if self.algorithm == "BFS":
-            self.map: MazeApp = DfsMaze(config)
-        else:
             self.map: MazeApp = BfsMaze(config)
+        else:
+            self.map: MazeApp = DfsMaze(config)
         self.map.generate()
         self.map._search_shortest_path()
         self.map._write()
