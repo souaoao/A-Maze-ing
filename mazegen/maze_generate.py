@@ -4,7 +4,7 @@ DFS/BFS による迷路生成、3x3全開放禁止、「42」保護領域制御�
 最短経路探索およびファイル出力機能を提供する
 """
 from random import Random
-from typing import List, Tuple, Dict, NamedTuple, Optional, Any
+from typing import List, Tuple, Dict, NamedTuple, Optional, Any, TextIO
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -229,6 +229,7 @@ class MazeApp(ABC):
             RuntimeError: ファイル書き込みに失敗した場合
         """
         try:
+            f: TextIO
             with open(self.output_file, "w", encoding="utf-8") as f:
                 row: List[int]
                 for row in self.grid:
