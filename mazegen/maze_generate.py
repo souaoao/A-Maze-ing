@@ -25,6 +25,7 @@ class Direction(NamedTuple):
     opposite: int
 
 
+# 各方向への移動量と壁ビット対応表
 DIRECTIONS: Dict[str, Direction] = {
     "to_north": Direction(0, -1, NORTH, SOUTH),
     "to_east": Direction(1, 0, EAST, WEST),
@@ -56,7 +57,7 @@ class MazeApp(ABC):
 
     @abstractmethod
     def generate(self) -> None:
-        pass
+        raise NotImplementedError
 
     def _can_break_wall(self, x: int, y: int, d: Direction) -> bool:
         """

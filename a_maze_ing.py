@@ -29,7 +29,7 @@ def main() -> None:
     except (
         PermissionError, ValueError, IndexError,
         TypeError, OSError, RecursionError,
-        RuntimeError
+        RuntimeError, NotImplementedError
     ) as error:
         print(f"Error: {error}")
         return
