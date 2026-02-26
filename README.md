@@ -117,9 +117,9 @@ ENTRY=0,0
 EXIT=10,10
 OUTPUT_FILE=maze.txt
 PERFECT=True
-#Optional
-#seed=100
-#ALGORITHM=DFS
+#SEED=100
+#ALGORITHM=BFS
+ALGORITHM=DFS
 ```
 
 ### Output File Format
@@ -210,12 +210,8 @@ generator = MazeGenerator(config)
 - Pull Request のレビューが十分ではなかったため、相互のコード理解が不十分となる場面があった。
 
 #### 使用ツール
-- Python 3.10+
-- `pydantic`
-- `flake8`, `mypy`
-- `make`
-- `build`
-- MLX Python binding (`mlx`)
+- discord
+- Github
 
 ## Resources
 ### 参考資料
