@@ -1,160 +1,220 @@
-*This project has been created as part of the 42 curriculum by smiyata, hwakatsu.*
+*This project was created as part of the 42 curriculum by smiyata and
+hwakatsu.*
 
 # A-Maze-ing
 
-## Description
-本プロジェクトは、42 Rank02 の課題向けに作成した Python 製の迷路生成・可視化プログラムである。
-以下の機能を実装している。
+A-Maze-ing is a configurable maze-generation engine and interactive visualizer
+written in Python. It turns a validated configuration into a maze, preserves a
+set of structural constraints, finds a shortest route, and writes the result in
+a compact hexadecimal wall format.
 
-- 設定ファイル（`KEY=VALUE`）の読み込み
-- 乱数シード（`SEED`）による再現可能な迷路生成
-- 課題仕様どおりの 16 進壁表現での出力
-- 最短経路（`N/E/S/W`）の計算と保存
-- MLX を使ったインタラクティブ表示
+This team project demonstrates graph algorithms, deterministic generation,
+bit-level data modelling, validation, file-format design, reusable packaging,
+and Git-based collaboration.
 
-迷路生成ロジックは `mazegen` パッケージ（`MazeGenerator`）として再利用可能。
+## What it does
 
-### Features
-- `pydantic` による必須キー検証
-- 迷路生成アルゴリズム
-  - `DFS`（サンプル設定のデフォルト）
-  - `BFS`
-- `PERFECT=True`（木構造ベースの完全迷路）
-- `PERFECT=False`（制約を守りつつ追加通路を開通）
-- 3x3 の完全開放領域を禁止
-- 閉鎖セルで「42」を可視化（小さい迷路ではコンソール通知して省略）
-- 課題仕様の出力フォーマット
-  - 16進グリッド
-  - 空行
-  - ENTRY座標
-  - EXIT座標
-  - 最短経路文字列
-- MLX 操作
-  - `ESC`: 終了
-  - `1`: 迷路再生成
-  - `2`: 最短経路の表示/非表示
-  - `3`: 壁色変更
-  - `4`: アニメーション描画
-
-## Instructions
-### Requirements
-- Python `3.10+`
-- `mlx` を表示できる Linux/X11 環境
-
-### Setup
-```zsh
-make install
+```text
+config.txt
+    -> Pydantic validation
+    -> DFS or BFS maze generation
+    -> structural constraint checks
+    -> BFS shortest-path search
+    -> hexadecimal maze file
+    -> MLX visualization
 ```
 
-### Run
-```zsh
-make run
-```
-または install 済み環境において、
-```zsh
-python3 a_maze_ing.py config.txt
-```
+The application supports:
 
-### Debug
-```zsh
-make debug
-```
+- recursive DFS and iterative BFS generation;
+- reproducible output from a random seed;
+- perfect and imperfect maze modes;
+- symmetric wall updates represented by four-bit cell values;
+- a protected, fully closed `42` pattern on sufficiently large maps;
+- prevention of fully open 3 × 3 areas;
+- shortest routes encoded with `N`, `E`, `S`, and `W`; and
+- a reusable `mazegen` package independent of the visualizer.
 
-### Lint / Type check
-```zsh
-make lint
-```
+## Engineering design
 
-### Build reusable package
-```zsh
-make build
-```
-生成物（distディレクトリ）:
-- `mazegen-1.0.0.tar.gz`
-- `mazegen-1.0.0-py3-none-any.whl`
+### Validated configuration
 
-これらのパスを `requirements.txt` に記載した上で、
-```zsh
-make install
-make run
-```
-を実行することで、パッケージ化した `mazegen` を用いた実行が可能。
+The configuration layer parses `KEY=VALUE` lines and normalizes them through a
+Pydantic model before generation starts. It validates positive dimensions,
+entry and exit bounds, distinct endpoints, a `.txt` output path, and the
+optional `DFS` or `BFS` algorithm value.
 
-### Clean temporary files
-```zsh
-make clean
-```
+Required keys:
 
-### Config File Format
-1 行につき 1 つの `KEY=VALUE` を記述する。
-`#` で始まる行はコメントとして無視する。
+| Key | Meaning |
+| --- | --- |
+| `WIDTH` | Maze width in cells |
+| `HEIGHT` | Maze height in cells |
+| `ENTRY` | Start coordinate as `x,y` |
+| `EXIT` | Goal coordinate as `x,y` |
+| `OUTPUT_FILE` | Output path ending in `.txt` |
+| `PERFECT` | Whether to keep a tree-shaped maze |
 
-### Mandatory keys
-- `WIDTH=<int>`
-  - 迷路の幅（セル数）
-- `HEIGHT=<int>`
-  - 迷路の高さ（セル数）
-- `ENTRY=<x>,<y>`
-  - 入口座標（< WIDTH, HEIGHT）
-- `EXIT=<x>,<y>`
-  - 出口座標（< WIDTH, HEIGHT かつ `ENTRY` と異なる）
-- `OUTPUT_FILE=<path>.txt`
-  - 出力ファイル名（`.txt` 必須）
-- `PERFECT=<bool>`
-  - `True` または `False`
+Optional keys:
 
-### Optional keys
-- `SEED=<int>`
-  - 乱数シード
-- `ALGORITHM=DFS|BFS`
-  - 生成アルゴリズム
+| Key | Meaning | Default behavior |
+| --- | --- | --- |
+| `SEED` | Integer random seed | Uses an unseeded random sequence |
+| `ALGORITHM` | `DFS` or `BFS` | Uses DFS |
 
-### Default example (`config.txt`)
-```txt
-WIDTH=11
-HEIGHT=11
+Example:
+
+```text
+WIDTH=19
+HEIGHT=15
 ENTRY=0,0
-EXIT=10,10
+EXIT=18,14
 OUTPUT_FILE=maze.txt
 PERFECT=True
-#SEED=100
-#ALGORITHM=BFS
+SEED=42
 ALGORITHM=DFS
 ```
 
-### Output File Format
-各セルは「閉じている壁」をビットで表し、16進 1 桁で出力する。
+Lines beginning directly with `#` are ignored. The parser intentionally expects
+one assignment per remaining line.
 
-- bit `0`: North
-- bit `1`: East
-- bit `2`: South
-- bit `3`: West
+### Four-bit wall model
 
-`1` は壁あり（閉）、`0` は壁なし（開）を示す。
+Each cell stores its closed walls in the low four bits of an integer:
 
-構成:
-1. 迷路行（16進、1行1段）
-2. 空行
-3. `entry_x,entry_y`
-4. `exit_x,exit_y`
-5. `N`,`E`,`S`,`W` のみで表す最短経路
+| Bit | Value | Wall |
+| ---: | ---: | --- |
+| 0 | `0b0001` | North |
+| 1 | `0b0010` | East |
+| 2 | `0b0100` | South |
+| 3 | `0b1000` | West |
 
-すべての行末は `\n` とする。
+A set bit means that the wall is closed. Opening a passage updates both cells:
+for example, removing one cell's east wall also removes its neighbor's west
+wall. The outer boundary remains closed.
 
-### Algorithm Choice
-#### 採用アルゴリズム
-- `DFS`（深さ優先・再帰バックトラッカー）
-- `BFS`（幅優先展開）
+The output stores each four-bit value as one uppercase hexadecimal digit. This
+keeps the serialized grid compact while preserving every wall.
 
-#### このアルゴリズムの選択理由
-- 異なる探索戦略（DFS・BFS）の挙動を比較し、理解を深めるため
-- 実装方法（再帰／イテレーティブ処理）の違いを学ぶため
+### Maze generation
 
-### Reusable Part (`mazegen`)
-再利用対象はリポジトリルートの `mazegen` パッケージであり、
-主なエントリーポイントは `MazeGenerator` クラスである。
+Both algorithms begin with every wall closed and mark the protected `42` cells
+as unavailable:
 
-#### Basic usage
+- **DFS** uses recursive backtracking and shuffles candidate directions with a
+  local `random.Random` instance.
+- **BFS** expands cells through a queue and uses the same seeded direction
+  shuffling.
+
+With `PERFECT=True`, the traversable graph is a tree: it is connected and has
+one route between any two traversable cells. With `PERFECT=False`, the generator
+opens additional eligible walls after building the initial maze. These extra
+connections can introduce cycles while retaining the structural checks.
+
+Before opening a wall, the engine verifies that:
+
+- the neighboring cell is inside the grid;
+- the wall is not part of the outer boundary;
+- neither cell belongs to the protected `42` region;
+- the passage is not already open; and
+- the change would not create a fully open 3 × 3 area.
+
+### Shortest-path search
+
+Generation and solution are separate steps. Regardless of whether DFS or BFS
+generated the maze, the solver runs BFS from `ENTRY` to `EXIT`. It records each
+cell's predecessor and reconstructs one shortest route as cardinal direction
+letters.
+
+For a grid with `V = WIDTH × HEIGHT` cells and at most four neighbors per cell,
+the shortest-path search is `O(V)` in time and space.
+
+### Protected `42` region
+
+For maps at least 9 cells wide and 7 cells high, the generator builds an
+18-cell `42` pattern around the center. Every protected cell stays at `0xF`, so
+all four of its walls remain closed. Entry and exit coordinates inside this
+region are rejected.
+
+Smaller maps skip the pattern and print an explanatory message.
+
+## Output format
+
+The output file contains:
+
+1. one hexadecimal grid row per maze row;
+2. one blank line;
+3. the entry coordinate;
+4. the exit coordinate; and
+5. the shortest route.
+
+```text
+F9...
+C2...
+...
+
+0,0
+18,14
+EESS...
+```
+
+Each line ends with a newline. The route contains only `N`, `E`, `S`, and `W`.
+
+## Project structure
+
+| Path | Responsibility |
+| --- | --- |
+| `a_maze_ing.py` | CLI orchestration and application-level error handling |
+| `read_config_params/` | Parsing, normalization, and Pydantic validation |
+| `mazegen/maze_generate.py` | Generation, constraints, solving, and output |
+| `output_maze/maze_model.py` | Validation of serialized maze data |
+| `output_maze/output_maze.py` | MLX rendering and keyboard interaction |
+| `tests/test_a_maze_ing.py` | Core behavior and invariant tests |
+| `pyproject.toml` | Reusable `mazegen` package definition |
+
+## Run locally
+
+Requirements:
+
+- Python 3.10 or later;
+- `make`; and
+- an environment compatible with the bundled MLX Python binding for graphical
+  output.
+
+```bash
+make install
+make run
+```
+
+Run with another configuration:
+
+```bash
+.venv/bin/python3 a_maze_ing.py path/to/config.txt
+```
+
+Other commands:
+
+```bash
+make debug   # run under pdb
+make lint    # run flake8 and mypy
+make build   # build the reusable mazegen package
+make clean   # remove generated local files
+```
+
+### Visualizer controls
+
+| Key | Action |
+| --- | --- |
+| `1` | Generate the maze again |
+| `2` | Show or hide the shortest route |
+| `3` | Change the wall color |
+| `4` | Toggle drawing animation |
+| `ESC` | Close the window |
+
+## Reuse as a package
+
+The algorithm is exposed through `MazeGenerator`:
+
 ```python
 from mazegen import MazeGenerator
 
@@ -170,57 +230,85 @@ config = {
 }
 
 generator = MazeGenerator(config)
+grid = generator.map.grid
+route = generator.map.shortest_path
 ```
 
-#### Custom parameters
-- サイズ: `WIDTH`, `HEIGHT`
-- 再現性: `SEED`
-- アルゴリズム: `ALGORITHM`（`DFS`/`BFS`）
-- 完全迷路モード: `PERFECT`
+`make build` creates a source distribution and wheel under `dist/`.
 
-#### 生成構造と解へのアクセス
-`MazeGenerator` は `generator.map` に迷路オブジェクトを保持する。
-以下にアクセス可能である。
+## Tests
 
-- `generator.map.grid`（壁ビットの2次元配列）
-- `generator.map.shortest_path`（方向文字の配列）
+The `unittest` suite verifies behavior rather than mirroring implementation
+lines. It covers:
 
-※この内部構造は再利用用データであり、出力テキスト形式そのものではない。
+- configuration parsing and invalid-input rejection;
+- deterministic generation from a fixed seed;
+- valid DFS- and BFS-generated routes;
+- matching walls between neighboring cells and closed outer walls;
+- the tree invariant for a perfect maze;
+- extra connections in imperfect mode;
+- prevention of fully open 3 × 3 areas;
+- preservation of all 18 protected `42` cells;
+- hexadecimal output structure; and
+- validation of loaded grid and route data.
 
-### Team & Project Management
-#### 役割分担
-- `smiyata`: config.txtのパース及びバリデーション, 迷路の表示機能, 実行環境の作成
-- `hwakatsu`: 迷路生成アルゴリズムの設計・実装、最短経路計算の実装、壁ビット構造の設計、再利用可能な `mazegen` パッケージの構築、追加制約ロジック（3x3 完全開放禁止・「42」閉鎖処理・外周制約）の設計と実装
+Run the tests after installation:
 
-#### 計画と実際
-- 初期計画
-  1. `MazeGenerator` の入出力仕様の合意
-  2. `config.txt` 入力処理の実装
-  3. 迷路生成アルゴリズムおよび表示機能の実装
-  4. 3 で実装した機能の統合
-  5. 実行環境の整理および `mazegen` パッケージの作成
-- 進行中の変更
-  - 入力形式を `BaseModel` インスタンスから `dict` へ変更
+```bash
+.venv/bin/python3 -m unittest discover -s tests -v
+```
 
-#### うまくいった点
-- 事前に入出力仕様を概ね確定していたため、統合作業を短期間で完了できた。
-- こまめなマージを実施し、同一ファイルでの同時作業を最小化した結果、コンフリクトの発生を防止できた。
+## Team collaboration
 
-#### 改善できる点
-- Pull Request のレビューが十分ではなかったため、相互のコード理解が不十分となる場面があった。
+The work was divided around a shared interface so the generator and visualizer
+could be developed independently and integrated through the output file.
 
-#### 使用ツール
-- discord
-- Github
+### smiyata
+
+- configuration parsing and validation;
+- maze visualization; and
+- runtime environment setup.
+
+### hwakatsu
+
+- DFS/BFS generation design and implementation;
+- shortest-path calculation;
+- four-bit wall representation;
+- reusable `mazegen` packaging; and
+- the 3 × 3, protected `42`, and outer-wall constraints.
+
+The team agreed on the generator's input and output contract early, then merged
+small branches frequently to reduce overlapping edits. The main improvement
+identified in retrospect was to make pull-request review more thorough so both
+contributors understood more of the other component's implementation.
+
+## Design boundaries
+
+- DFS generation is recursive, so very large maps can reach Python's recursion
+  limit.
+- Imperfect mode adds eligible passages heuristically; it does not sample
+  uniformly from all possible imperfect mazes.
+- If no wall is eligible, imperfect mode cannot guarantee an additional
+  passage.
+- The protected `42` pattern is disabled below 9 × 7.
+- The configuration parser is strict: blank lines and indented comments are not
+  accepted as comments.
+- The graphical layer depends on the bundled MLX binding and a compatible
+  display environment. Core generation and tests do not require opening a GUI.
+- Tests cover representative invariants and configurations; they are not a
+  formal proof for every size and seed.
 
 ## Resources
-### 参考資料
-- 42 subject PDF: `maze_en.subject.pdf`
 
-### AI利用について
-AI は以下の用途で使用した。
-- README 下書き・文章改善
-- 課題要件との照合チェック
-- セクション構成の見直し
+- [Python documentation](https://docs.python.org/3/)
+- [Pydantic documentation](https://docs.pydantic.dev/)
+- [Breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)
+- [Depth-first search](https://en.wikipedia.org/wiki/Depth-first_search)
+- 42 project subject: `maze_en.subject.pdf`
 
-最終的な実装判断および文書内容は、コードと挙動を確認した上で手動調整した。
+## AI usage
+
+AI was used to review documentation structure, improve wording, and identify
+test cases. Suggestions were checked against the implementation before being
+included. The project code and final technical decisions remain the authors'
+work.
